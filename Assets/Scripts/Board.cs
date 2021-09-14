@@ -41,13 +41,27 @@ public class Board : MonoBehaviour
         SetupGamePieces();
         SetupCamera();
         FillBoard(fillYOffset, fillFallTime);
-        _particleManager = FindObjectOfType<ParticleManager>();
 
+        _particleManager = FindObjectOfType<ParticleManager>();
     }
 
+    #region SETUP
     void LoadBoardForLevel()
     {
         _lvlBoard = Resources.Load($"{BOARD_LOCATION}{currentLevel}") as LevelBoardSO;
+    }
+    void SetupCamera()
+    {
+        float horizCenter = (_lvlBoard.height - 1) / 2f;
+        float vertiCenter = (_lvlBoard.width - 1) / 2f;
+
+        Camera.main.transform.position = new Vector3(vertiCenter, horizCenter, -10f);
+
+        float aspectRatio = (float)Screen.width / (float)Screen.height;
+        float verticalSize = (float)_lvlBoard.height / 2f + (float)borderSize;
+        float horizontalSize = ((float)_lvlBoard.width / 2f + (float)borderSize) / aspectRatio;
+
+        Camera.main.orthographicSize = (verticalSize > horizontalSize) ? verticalSize : horizontalSize;
     }
 
     void SetupTiles()
@@ -72,7 +86,9 @@ public class Board : MonoBehaviour
             }
         }
     }
+    #endregion SETUP
 
+    #region CREATE
     private void CreateTile(GameObject prefab, int x, int y, int z = 0)
     {
         if (prefab != null && IsWithinBounds(x, y))
@@ -108,20 +124,21 @@ public class Board : MonoBehaviour
         return null;
     }
 
-    void SetupCamera()
+    private GameObject CreateBomb(GameObject prefab, int x, int y)
     {
-        float horizCenter = (_lvlBoard.height - 1) / 2f;
-        float vertiCenter = (_lvlBoard.width - 1) / 2f;
-
-        Camera.main.transform.position = new Vector3(vertiCenter, horizCenter, -10f);
-
-        float aspectRatio = (float)Screen.width / (float)Screen.height;
-        float verticalSize = (float)_lvlBoard.height / 2f + (float)borderSize;
-        float horizontalSize = ((float)_lvlBoard.width / 2f + (float)borderSize) / aspectRatio;
-
-        Camera.main.orthographicSize = (verticalSize > horizontalSize) ? verticalSize : horizontalSize;
+        if (prefab != null && IsWithinBounds(x, y))
+        {
+            Bomb bombInstance = Instantiate(prefab, new Vector3(x, y, 0), Quaternion.identity).GetComponent<Bomb>();
+            bombInstance?.Init(this);
+            bombInstance?.SetCoord(x, y);
+            bombInstance.transform.parent = transform;
+            return bombInstance.gameObject;
+        }
+        return null;
     }
+    #endregion CREATE
 
+    #region INSERT
     public void PlaceGamePiece(GamePiece gamePiece, int x, int y)
     {
         if (gamePiece == null)
@@ -135,11 +152,6 @@ public class Board : MonoBehaviour
         gamePiece.SetCoord(x, y);
 
         if (IsWithinBounds(x, y)) _allGamePieces[x, y] = gamePiece;
-    }
-
-    bool IsWithinBounds(int x, int y)
-    {
-        return (x >= 0 && y >= 0 && x < _lvlBoard.width && y < _lvlBoard.height);
     }
 
     void FillBoard(int falseOffset = 0, float fallTime = 0.1f)
@@ -182,10 +194,70 @@ public class Board : MonoBehaviour
         return null;
     }
 
+    IEnumerator RefillRoutine()
+    {
+        FillBoard(fillYOffset, fillFallTime);
+        yield return null;
+    }
+    #endregion INSERT
+
+    #region CHECKS
+    bool IsWithinBounds(int x, int y)
+    {
+        return (x >= 0 && y >= 0 && x < _lvlBoard.width && y < _lvlBoard.height);
+    }
+
+    bool IsSpaceAvailable(int x, int y, bool notNull = false)
+    {
+        return ((notNull ^ _allGamePieces[x, y] == null) && _allTiles[x, y].type != TileType.Obstacle);
+    }
+
+    bool IsCornerMatch(List<GamePiece> gamePieces)
+    {
+        bool vertical = false, horizontal = false;
+        int xStart = -1, yStart = -1;
+
+        foreach (GamePiece gamePiece in gamePieces)
+        {
+            if (gamePiece != null)
+            {
+                if (xStart == -1 || yStart == -1)
+                {
+                    xStart = gamePiece.xIndex;
+                    yStart = gamePiece.yIndex;
+                    continue;
+                }
+
+                if (gamePiece.xIndex != xStart && gamePiece.yIndex == yStart)
+                    horizontal = true;
+                if (gamePiece.xIndex == xStart && gamePiece.yIndex != yStart)
+                    vertical = true;
+            }
+        }
+        return horizontal && vertical;
+    }
+
+    // Used to check whether the column has finished collapsing
+    bool IsCollapsed(List<GamePiece> gamePieces)
+    {
+        foreach (GamePiece gamePiece in gamePieces)
+        {
+            if (gamePiece != null)
+            {
+                if (gamePiece.transform.position.y - (float)gamePiece.yIndex > 0.01f)
+                {
+                    //Debug.Log($"{gamePiece.transform.position.y - (float)gamePiece.yIndex}");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     bool HasMatchOnFill(int x, int y, int minLength = 3)
     {
         // Only need to check left and down since we are filling  
-        // the board from left to right and from down up
+        // the board from left to right and from down-up
         List<GamePiece> leftMatches = FindMatches(x, y, new Vector2(-1, 0), minLength);
         List<GamePiece> downMatches = FindMatches(x, y, new Vector2(0, -1), minLength);
 
@@ -195,6 +267,14 @@ public class Board : MonoBehaviour
         return leftMatches.Count > 0 || downMatches.Count > 0;
     }
 
+    bool IsNextTo(Tile endTile)
+    {
+        return (Mathf.Abs(_clickedTile.xIndex - endTile.xIndex) == 1 && _clickedTile.yIndex == endTile.yIndex) ||
+               (Mathf.Abs(_clickedTile.yIndex - endTile.yIndex) == 1 && _clickedTile.xIndex == endTile.xIndex);
+    }
+    #endregion CHECKS
+
+    #region INTERACTION
     public void ClickTile(Tile tile)
     {
         if (_clickedTile == null)
@@ -260,13 +340,9 @@ public class Board : MonoBehaviour
             }
         }
     }
+    #endregion INTERACTION
 
-    bool IsNextTo(Tile endTile)
-    {
-        return (Mathf.Abs(_clickedTile.xIndex - endTile.xIndex) == 1 && _clickedTile.yIndex == endTile.yIndex) ||
-               (Mathf.Abs(_clickedTile.yIndex - endTile.yIndex) == 1 && _clickedTile.xIndex == endTile.xIndex);
-    }
-
+    #region MATCHES
     List<GamePiece> FindMatches(int startX, int startY, Vector2 searchDirection, int minLength = 3)
     {
         List<GamePiece> matches = new List<GamePiece>();
@@ -390,7 +466,9 @@ public class Board : MonoBehaviour
 
         return combinedMatches;
     }
+    #endregion MATCHES
 
+    #region HIGHLIGHT
     private void HighlightMatchesAt(int x, int y)
     {
         HighlightTileOff(x, y);
@@ -442,7 +520,9 @@ public class Board : MonoBehaviour
             }
         }
     }
+    #endregion HIGHLIGHT
 
+    #region CLEARING
     void ClearPieceAt(int x, int y)
     {
         GamePiece pieceToClear = _allGamePieces[x, y];
@@ -529,11 +609,6 @@ public class Board : MonoBehaviour
         return movingPieces;
     }
 
-    bool IsSpaceAvailable(int x, int y, bool notNull = false)
-    {
-        return ((notNull ^ _allGamePieces[x, y] == null) && _allTiles[x, y].type != TileType.Obstacle);
-    }
-
     List<GamePiece> CollapseColumn(List<GamePiece> gamePieces)
     {
         List<GamePiece> movingPieces = new List<GamePiece>();
@@ -545,20 +620,6 @@ public class Board : MonoBehaviour
         }
 
         return movingPieces;
-    }
-
-    List<int> GetColumns(List<GamePiece> gamePieces)
-    {
-        List<int> columns = new List<int>();
-
-        foreach (GamePiece gamePiece in gamePieces)
-        {
-            if (!columns.Contains(gamePiece.xIndex))
-            {
-                columns.Add(gamePiece.xIndex);
-            }
-        }
-        return columns;
     }
 
     void ClearAndRefillBoard(List<GamePiece> gamePieces)
@@ -583,12 +644,6 @@ public class Board : MonoBehaviour
         while (matches.Count > 0);
 
         _playerInputEnabled = true;
-    }
-
-    IEnumerator RefillRoutine()
-    {
-        FillBoard(fillYOffset, fillFallTime);
-        yield return null;
     }
 
     IEnumerator ClearAndCollapseRoutine(List<GamePiece> gamePieces, float delayBetweenMoves = 0.2f)
@@ -635,22 +690,21 @@ public class Board : MonoBehaviour
             }
         }
     }
+    #endregion CLEARING
 
-    // Used to check whether the column has finished collapsing
-    bool IsCollapsed(List<GamePiece> gamePieces)
+    #region GETTERS
+    List<int> GetColumns(List<GamePiece> gamePieces)
     {
+        List<int> columns = new List<int>();
+
         foreach (GamePiece gamePiece in gamePieces)
         {
-            if (gamePiece != null)
+            if (!columns.Contains(gamePiece.xIndex))
             {
-                if (gamePiece.transform.position.y - (float)gamePiece.yIndex > 0.01f)
-                {
-                    //Debug.Log($"{gamePiece.transform.position.y - (float)gamePiece.yIndex}");
-                    return false;
-                }
+                columns.Add(gamePiece.xIndex);
             }
         }
-        return true;
+        return columns;
     }
 
     List<GamePiece> GetRowPieces(int row)
@@ -689,7 +743,7 @@ public class Board : MonoBehaviour
         {
             for (int j = y - offset; j <= y + offset; j++)
             {
-                if(IsWithinBounds(i, j) && _allGamePieces[i,j] != null)
+                if (IsWithinBounds(i, j) && _allGamePieces[i, j] != null)
                 {
                     gamePieces.Add(_allGamePieces[i, j]);
                 }
@@ -702,15 +756,15 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> allPiecesToClear = new List<GamePiece>();
 
-        foreach(GamePiece gamePiece in gamePieces)
+        foreach (GamePiece gamePiece in gamePieces)
         {
-            if(gamePiece != null)
+            if (gamePiece != null)
             {
                 List<GamePiece> piecesToClear = new List<GamePiece>();
 
                 Bomb bombPiece = gamePiece.GetComponent<Bomb>();
 
-                if(bombPiece != null)
+                if (bombPiece != null)
                 {
                     switch (bombPiece.type)
                     {
@@ -735,4 +789,5 @@ public class Board : MonoBehaviour
         }
         return allPiecesToClear;
     }
+    #endregion GETTERS
 }
