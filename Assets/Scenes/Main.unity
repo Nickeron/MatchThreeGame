@@ -156,6 +156,9 @@ MonoBehaviour:
   tileObstaclePrefab: {fileID: 1612353546972030994, guid: 32204afcf83ee2f4288376bab5c81420, type: 3}
   tileBreakablePrefab: {fileID: 4250746380573251446, guid: bb83a9a6502c4954aad635d6e1407414, type: 3}
   tileDoubleBreakablePrefab: {fileID: 5461715903447065406, guid: 2508c0eab94986e468eab262861f7b0d, type: 3}
+  adjacentBombPrefab: {fileID: 5751519444938394736, guid: 4200403df47c47c418a555245a9bf44c, type: 3}
+  columnBombPrefab: {fileID: 4038168604115784078, guid: 71a142492308b4e439bd8db61e633241, type: 3}
+  rowBombPrefab: {fileID: 8989917482009704927, guid: cdb0dacb90038fd498bade2c1e94d06a, type: 3}
   gamePiecePrefabs:
   - {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
   - {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
@@ -228,7 +231,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0
   far clip plane: 1000
   field of view: 60
   orthographic: 1
@@ -343,7 +346,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!114 &902764984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -378,7 +381,7 @@ Canvas:
   serializedVersion: 3
   m_RenderMode: 1
   m_Camera: {fileID: 519420031}
-  m_PlaneDistance: 100
+  m_PlaneDistance: 1
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
@@ -386,7 +389,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_TargetDisplay: 0
 --- !u!224 &902764986
 RectTransform:
@@ -523,16 +526,19 @@ MonoBehaviour:
   swapTime: 0.3
   _clickedTile: {fileID: 0}
   _targetTile: {fileID: 0}
-  startingTiles:
-  - prefab: {fileID: 0}
+  startingPieces:
+  - prefab: {fileID: 5751519444938394736, guid: 4200403df47c47c418a555245a9bf44c, type: 3}
     x: 2
-    y: 3
+    y: 1
     z: 0
-  - prefab: {fileID: 0}
-    x: 5
-    y: 5
+  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+    x: 2
+    y: 2
     z: 0
-  startingPieces: []
+  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+    x: 2
+    y: 0
+    z: 0
 --- !u!1 &1802371946
 GameObject:
   m_ObjectHideFlags: 0
@@ -584,7 +590,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.17254902, g: 0.09019608, b: 0.2784314, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

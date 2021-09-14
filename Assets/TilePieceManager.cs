@@ -1,3 +1,5 @@
+using Sirenix.OdinInspector;
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,7 +7,11 @@ using UnityEngine;
 public class TilePieceManager : MonoBehaviour
 {
     public static TilePieceManager Instance;
+    [BoxGroup("Tiles")]
     public GameObject tileNormalPrefab, tileObstaclePrefab, tileBreakablePrefab, tileDoubleBreakablePrefab;
+    [BoxGroup("Bombs")]
+    public GameObject adjacentBombPrefab, columnBombPrefab, rowBombPrefab;
+    [BoxGroup("Normal Game Pieces")]
     public GameObject[] gamePiecePrefabs;
 
     private void Awake()

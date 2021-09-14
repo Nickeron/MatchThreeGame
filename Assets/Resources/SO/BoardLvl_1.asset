@@ -26,10 +26,16 @@ MonoBehaviour:
       Data: 0|TileType[,], Assembly-CSharp
     - Name: 
       Entry: 12
-      Data: 64
+      Data: 72
     - Name: ranks
       Entry: 1
-      Data: 8|8
+      Data: 8|9
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
     - Name: 
       Entry: 3
       Data: 0
@@ -93,6 +99,15 @@ MonoBehaviour:
     - Name: 
       Entry: 3
       Data: 3
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
     - Name: 
       Entry: 3
       Data: 0
@@ -223,10 +238,19 @@ MonoBehaviour:
       Entry: 3
       Data: 0
     - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
       Entry: 13
       Data: 
     - Name: 
       Entry: 8
       Data: 
   width: 8
-  height: 8
+  height: 9

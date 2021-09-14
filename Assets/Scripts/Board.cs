@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 public class Board : MonoBehaviour
-{  
+{
     public int borderSize = 0;
     public int fillYOffset = 10;
     public float fillFallTime = 0.1f;
@@ -20,7 +20,7 @@ public class Board : MonoBehaviour
 
     bool _playerInputEnabled = true;
 
-    public StartingObject[] startingTiles, startingPieces;
+    public StartingObject[] startingPieces;
 
     private LevelBoardSO _lvlBoard;
     private ParticleManager _particleManager;
@@ -63,9 +63,9 @@ public class Board : MonoBehaviour
 
     void SetupGamePieces()
     {
-        foreach(StartingObject sPiece in startingPieces)
+        foreach (StartingObject sPiece in startingPieces)
         {
-            if(sPiece != null)
+            if (sPiece != null)
             {
                 GameObject piece = Instantiate(sPiece.prefab, new Vector3(sPiece.x, sPiece.y, 0), Quaternion.identity);
                 CreateGamePiece(piece, sPiece.x, sPiece.y, fillYOffset, fillFallTime);
@@ -116,8 +116,8 @@ public class Board : MonoBehaviour
         Camera.main.transform.position = new Vector3(vertiCenter, horizCenter, -10f);
 
         float aspectRatio = (float)Screen.width / (float)Screen.height;
-        float verticalSize = (float)_lvlBoard.height / 2f + (float) borderSize;
-        float horizontalSize = ((float)_lvlBoard.width / 2f + (float) borderSize) / aspectRatio;
+        float verticalSize = (float)_lvlBoard.height / 2f + (float)borderSize;
+        float horizontalSize = ((float)_lvlBoard.width / 2f + (float)borderSize) / aspectRatio;
 
         Camera.main.orthographicSize = (verticalSize > horizontalSize) ? verticalSize : horizontalSize;
     }
@@ -172,14 +172,14 @@ public class Board : MonoBehaviour
             }
         }
     }
-    
+
     private GamePiece FillRandomAt(int x, int y, int falseYOffset = 0, float fallTime = 0.1f)
     {
-        if(IsWithinBounds(x, y))
+        if (IsWithinBounds(x, y))
         {
             return CreateGamePiece(Instantiate(TilePieceManager.Instance.GetRandomGamePiece(), Vector3.zero, Quaternion.identity), x, y, falseYOffset, fallTime);
         }
-        return null;          
+        return null;
     }
 
     bool HasMatchOnFill(int x, int y, int minLength = 3)
@@ -463,7 +463,7 @@ public class Board : MonoBehaviour
             {
                 ClearPieceAt(piece.xIndex, piece.yIndex);
                 _particleManager?.ClearPieceFXAt(piece.xIndex, piece.yIndex);
-            }                
+            }
         }
     }
 
@@ -482,8 +482,8 @@ public class Board : MonoBehaviour
     {
         Tile breakableTile = _allTiles[x, y];
         if (breakableTile != null)
-        {            
-            _particleManager?.BreakTileFXAt(breakableTile.breakableValue, x, y); 
+        {
+            _particleManager?.BreakTileFXAt(breakableTile.breakableValue, x, y);
             breakableTile.BreakTile();
         }
     }
@@ -604,6 +604,9 @@ public class Board : MonoBehaviour
 
         while (!isFinished)
         {
+            // Checking for bombs as well!
+            gamePieces = gamePieces.Union(GetBombedPieces(gamePieces)).ToList();
+
             ClearPieceAt(gamePieces);
             BreakTileAt(gamePieces);
 
@@ -648,5 +651,88 @@ public class Board : MonoBehaviour
             }
         }
         return true;
+    }
+
+    List<GamePiece> GetRowPieces(int row)
+    {
+        return GetLanePieces(row);
+    }
+
+    List<GamePiece> GetColumnPieces(int column)
+    {
+        return GetLanePieces(column, isRow: false);
+    }
+
+    List<GamePiece> GetLanePieces(int lane, bool isRow = true)
+    {
+        List<GamePiece> gamePieces = new List<GamePiece>();
+
+        int limit = isRow ? _lvlBoard.width : _lvlBoard.height;
+
+        for (int index = 0; index < limit; index++)
+        {
+            GamePiece gamePiece = isRow ? _allGamePieces[index, lane] : _allGamePieces[lane, index];
+
+            if (gamePiece != null)
+            {
+                gamePieces.Add(gamePiece);
+            }
+        }
+        return gamePieces;
+    }
+
+    List<GamePiece> GetAdjacentPieces(int x, int y, int offset = 1)
+    {
+        List<GamePiece> gamePieces = new List<GamePiece>();
+
+        for (int i = x - offset; i <= x + offset; i++)
+        {
+            for (int j = y - offset; j <= y + offset; j++)
+            {
+                if(IsWithinBounds(i, j) && _allGamePieces[i,j] != null)
+                {
+                    gamePieces.Add(_allGamePieces[i, j]);
+                }
+            }
+        }
+        return gamePieces;
+    }
+
+    List<GamePiece> GetBombedPieces(List<GamePiece> gamePieces)
+    {
+        List<GamePiece> allPiecesToClear = new List<GamePiece>();
+
+        foreach(GamePiece gamePiece in gamePieces)
+        {
+            if(gamePiece != null)
+            {
+                List<GamePiece> piecesToClear = new List<GamePiece>();
+
+                Bomb bombPiece = gamePiece.GetComponent<Bomb>();
+
+                if(bombPiece != null)
+                {
+                    switch (bombPiece.type)
+                    {
+                        case BombType.None:
+                            break;
+                        case BombType.Column:
+                            piecesToClear = GetColumnPieces(bombPiece.xIndex);
+                            break;
+                        case BombType.Row:
+                            piecesToClear = GetRowPieces(bombPiece.yIndex);
+                            break;
+                        case BombType.Adjacent:
+                            piecesToClear = GetAdjacentPieces(bombPiece.xIndex, bombPiece.yIndex, 1);
+                            break;
+                        case BombType.Color:
+                            //TODO: Fill this in
+                            break;
+                    }
+                    allPiecesToClear = allPiecesToClear.Union(piecesToClear).ToList();
+                }
+            }
+        }
+        return allPiecesToClear;
     }
 }
