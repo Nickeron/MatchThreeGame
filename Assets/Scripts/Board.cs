@@ -10,7 +10,7 @@ public class Board : MonoBehaviour
     public int fillYOffset = 10;
     public float fillFallTime = 0.1f;
 
-    public float swapTime = 0.5f;
+    public float swapTime = 0.2f;
 
     Tile[,] _allTiles;
     GamePiece[,] _allGamePieces;
@@ -21,6 +21,9 @@ public class Board : MonoBehaviour
     bool _playerInputEnabled = true;
 
     public StartingObject[] startingPieces;
+
+    GameObject _clickedTileBomb;
+    GameObject _targetTileBomb;
 
     private LevelBoardSO _lvlBoard;
     private ParticleManager _particleManager;
@@ -124,13 +127,13 @@ public class Board : MonoBehaviour
         return null;
     }
 
-    private GameObject CreateBomb(GameObject prefab, int x, int y)
+    private GameObject CreateBomb(GameObject prefab, Tile pos)
     {
-        if (prefab != null && IsWithinBounds(x, y))
+        if (prefab != null && IsWithinBounds(pos.xIndex, pos.yIndex))
         {
-            Bomb bombInstance = Instantiate(prefab, new Vector3(x, y, 0), Quaternion.identity).GetComponent<Bomb>();
+            Bomb bombInstance = Instantiate(prefab, new Vector3(pos.xIndex, pos.yIndex, 0), Quaternion.identity).GetComponent<Bomb>();
             bombInstance?.Init(this);
-            bombInstance?.SetCoord(x, y);
+            bombInstance?.SetCoord(pos.xIndex, pos.yIndex);
             bombInstance.transform.parent = transform;
             return bombInstance.gameObject;
         }
@@ -199,6 +202,71 @@ public class Board : MonoBehaviour
         FillBoard(fillYOffset, fillFallTime);
         yield return null;
     }
+
+    private GameObject InsertBomb(Tile pos, Vector2 swapDirection, List<GamePiece> gamePieces, GamePiece targetPiece)
+    {
+        GameObject bomb = null;
+
+        if(gamePieces.Count >= 4)
+        {
+            if (IsCornerMatch(gamePieces))
+            {
+                // Insert Adjacent Bomb
+                if (TilePieceManager.Instance.adjacentBombPrefab != null)
+                {
+                    bomb = CreateBomb(TilePieceManager.Instance.adjacentBombPrefab, pos);
+                }
+            }
+            else
+            {
+                if (swapDirection.x != 0)
+                {
+                    // Insert row bomb
+                    if (TilePieceManager.Instance.rowBombPrefab != null)
+                    {
+                        bomb = CreateBomb(TilePieceManager.Instance.rowBombPrefab, pos);
+                    }
+                }
+                else
+                {
+                    //Insert column bomb
+                    if (TilePieceManager.Instance.columnBombPrefab != null)
+                    {
+                        bomb = CreateBomb(TilePieceManager.Instance.columnBombPrefab, pos);
+                    }
+                }
+            }
+            bomb.GetComponent<GamePiece>().SetColor(targetPiece);
+        }
+        return bomb;
+    }
+
+    private void EnablePossibleBombs()
+    {
+        if (_clickedTileBomb != null)
+        {
+            EnableBomb(_clickedTileBomb);
+            _clickedTileBomb = null;
+        }
+        
+        if (_targetTileBomb != null)
+        {
+            EnableBomb(_targetTileBomb);
+            _targetTileBomb = null;
+        }
+    }
+
+    private void EnableBomb(GameObject bomb)
+    {        
+        int x = (int) bomb.transform.position.x;
+        int y = (int) bomb.transform.position.y;
+
+        if(IsWithinBounds(x, y))
+        {
+            Debug.Log($"Enabling bomb at {x},{y}");
+            _allGamePieces[x, y] = bomb.GetComponent<GamePiece>();
+        }
+    }
     #endregion INSERT
 
     #region CHECKS
@@ -221,6 +289,7 @@ public class Board : MonoBehaviour
         {
             if (gamePiece != null)
             {
+                // If this is the first piece we check, set it as first and skip checking
                 if (xStart == -1 || yStart == -1)
                 {
                     xStart = gamePiece.xIndex;
@@ -335,6 +404,12 @@ public class Board : MonoBehaviour
                 {
                     yield return new WaitForSeconds(swapTime);
 
+                    Vector2 swipeDirection = new Vector2(targetTile.xIndex - clickedTile.xIndex, targetTile.yIndex - clickedTile.yIndex);
+
+                    // Check if there is a bomb after the switch, for both tiles' matches
+                    _clickedTileBomb = InsertBomb(clickedTile, swipeDirection, clickedPieceMatches, targetPiece);
+                    _targetTileBomb = InsertBomb(targetTile, swipeDirection, targetPieceMatches, clickedPiece);
+
                     ClearAndRefillBoard(clickedPieceMatches.Union(targetPieceMatches).ToList());
                 }
             }
@@ -402,7 +477,7 @@ public class Board : MonoBehaviour
 
     List<GamePiece> FindDirectionMatches(int startX, int startY, Vector2 firstDirection, int minLength = 3)
     {
-        Debug.Log($"Searching in the direction {firstDirection} and {-firstDirection}");
+        //Debug.Log($"Searching in the direction {firstDirection} and {-firstDirection}");
 
         List<GamePiece> directionMatches = FindMatches(startX, startY, firstDirection, 2);
         List<GamePiece> oppositeDirMatches = FindMatches(startX, startY, -firstDirection, 2);
@@ -415,7 +490,7 @@ public class Board : MonoBehaviour
 
         var combinedMatches = directionMatches.Union(oppositeDirMatches).ToList();
 
-        Debug.Log($"Found {combinedMatches.Count} matches");
+        //Debug.Log($"Found {combinedMatches.Count} matches");
 
         return combinedMatches.Count >= minLength ? combinedMatches : null;
     }
@@ -664,6 +739,7 @@ public class Board : MonoBehaviour
 
             ClearPieceAt(gamePieces);
             BreakTileAt(gamePieces);
+            EnablePossibleBombs();
 
             yield return new WaitForSeconds(delayBetweenMoves);
 

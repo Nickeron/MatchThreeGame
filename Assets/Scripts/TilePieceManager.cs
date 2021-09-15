@@ -2,9 +2,11 @@ using Sirenix.OdinInspector;
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+
 using UnityEngine;
 
-public class TilePieceManager : MonoBehaviour
+public class TilePieceManager : SerializedMonoBehaviour
 {
     public static TilePieceManager Instance;
     [BoxGroup("Tiles")]
@@ -13,6 +15,9 @@ public class TilePieceManager : MonoBehaviour
     public GameObject adjacentBombPrefab, columnBombPrefab, rowBombPrefab;
     [BoxGroup("Normal Game Pieces")]
     public GameObject[] gamePiecePrefabs;
+    [BoxGroup("Colors and Values")]
+    [TableList]
+    public List<ColorValue> colorValues = new List<ColorValue>();
 
     private void Awake()
     {
@@ -37,8 +42,31 @@ public class TilePieceManager : MonoBehaviour
 
         if (gamePiecePrefabs[randomIdx] == null)
         {
-            Debug.LogWarning($"Board: {randomIdx} does not contain a valid Gamepiece prefab");
+            Debug.LogWarning($"TilePieceManager: {randomIdx} does not contain a valid Gamepiece prefab");
         }
         return gamePiecePrefabs[randomIdx];
     }
+
+    internal ColorValue GetRandomColorValue()
+    {
+        int randomIdx = Random.Range(0, colorValues.Count);
+
+        if (colorValues[randomIdx] == null)
+        {
+            Debug.LogWarning($"TilePieceManager: {randomIdx} does not contain a valid color value");
+        }
+        return colorValues[randomIdx];
+    }
+
+    internal Color GetColor(MatchValue match)
+    {
+        return colorValues.FirstOrDefault(c => c.match == match).color;
+    }
+}
+
+[System.Serializable]
+public class ColorValue
+{
+    public MatchValue match;
+    public Color color = Color.white;    
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
+[RequireComponent(typeof(SpriteRenderer))]
 public class GamePiece : MonoBehaviour
 {
     public int xIndex;
@@ -15,38 +16,17 @@ public class GamePiece : MonoBehaviour
 
     public InterpType interpolation = InterpType.SmootherStep;
     public MatchValue matchValue;
-    public enum InterpType
-    {
-        Linear,
-        EaseOut,
-        EaseIn,
-        SmoothStep,
-        SmootherStep
-    }
-
-    public enum MatchValue
-    {
-        Yellow,
-        Blue,
-        Magenta,
-        Indigo,
-        Green,
-        Teal,
-        Red,
-        Cyan,
-        Wild
-    }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            Move((int) transform.position.x + 1, (int) transform.position.y, 0.5f);
+            Move((int)transform.position.x + 1, (int)transform.position.y, 0.5f);
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            Move((int) transform.position.x - 1, (int) transform.position.y, 0.5f);
+            Move((int)transform.position.x - 1, (int)transform.position.y, 0.5f);
         }
     }
 
@@ -89,7 +69,7 @@ public class GamePiece : MonoBehaviour
                 _board?.PlaceGamePiece(this, (int)destination.x, (int)destination.y);
             }
 
-            elapsedTime += Time.deltaTime;            
+            elapsedTime += Time.deltaTime;
 
             transform.position = Vector3.Lerp(startPosition, destination, InterpolateTime(elapsedTime, timeToMove));
 
@@ -119,4 +99,43 @@ public class GamePiece : MonoBehaviour
 
         return t;
     }
+
+    public void SetColor(GamePiece matchObject)
+    {
+        if (matchObject != null) SetColor(matchObject.matchValue);
+    }
+
+    public void SetColor(MatchValue newValue)
+    {
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = TilePieceManager.Instance.GetColor(newValue);
+        }
+
+        matchValue = newValue;
+    }
+}
+
+public enum InterpType
+{
+    Linear,
+    EaseOut,
+    EaseIn,
+    SmoothStep,
+    SmootherStep
+}
+
+public enum MatchValue
+{
+    Yellow,
+    Blue,
+    Magenta,
+    Indigo,
+    Green,
+    Teal,
+    Red,
+    Cyan,
+    Wild
 }

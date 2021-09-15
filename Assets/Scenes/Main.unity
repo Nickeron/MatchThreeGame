@@ -152,6 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20152ae09d2d68a4b8cf16010b9b9800, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
   tileNormalPrefab: {fileID: 3726806608113152428, guid: 37285e33256717b44972a887925323d3, type: 3}
   tileObstaclePrefab: {fileID: 1612353546972030994, guid: 32204afcf83ee2f4288376bab5c81420, type: 3}
   tileBreakablePrefab: {fileID: 4250746380573251446, guid: bb83a9a6502c4954aad635d6e1407414, type: 3}
@@ -168,6 +177,23 @@ MonoBehaviour:
   - {fileID: 3694498042805513533, guid: e1c78ae24314d7644ac08929e8554015, type: 3}
   - {fileID: 3774476922422366930, guid: a0c121fc1cec11f4faacb212ff0ed308, type: 3}
   - {fileID: 8011044252174811526, guid: 604e95cc2da3d2e4a82792f67e7d7e18, type: 3}
+  colorValues:
+  - match: 0
+    color: {r: 0.9686275, g: 0.8313726, b: 0.10588236, a: 1}
+  - match: 5
+    color: {r: 0.09411766, g: 0.6509804, b: 0.5921569, a: 1}
+  - match: 6
+    color: {r: 0.85098046, g: 0.20000002, b: 0.24705884, a: 1}
+  - match: 1
+    color: {r: 0.41960788, g: 0.5411765, b: 0.8235295, a: 1}
+  - match: 2
+    color: {r: 0.70980394, g: 0.21568629, b: 0.5372549, a: 1}
+  - match: 4
+    color: {r: 0.0627451, g: 0.34901962, b: 0.3529412, a: 1}
+  - match: 7
+    color: {r: 0.56078434, g: 0.8313726, b: 0.85098046, a: 1}
+  - match: 3
+    color: {r: 0.13333334, g: 0.09411766, b: 0.6509804, a: 1}
 --- !u!4 &286863686
 Transform:
   m_ObjectHideFlags: 0
@@ -527,9 +553,9 @@ MonoBehaviour:
   _clickedTile: {fileID: 0}
   _targetTile: {fileID: 0}
   startingPieces:
-  - prefab: {fileID: 5751519444938394736, guid: 4200403df47c47c418a555245a9bf44c, type: 3}
+  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
     x: 2
-    y: 1
+    y: 3
     z: 0
   - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
     x: 2
@@ -538,6 +564,10 @@ MonoBehaviour:
   - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
     x: 2
     y: 0
+    z: 0
+  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+    x: 3
+    y: 1
     z: 0
 --- !u!1 &1802371946
 GameObject:
