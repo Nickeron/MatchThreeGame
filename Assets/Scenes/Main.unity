@@ -166,6 +166,7 @@ MonoBehaviour:
   tileBreakablePrefab: {fileID: 4250746380573251446, guid: bb83a9a6502c4954aad635d6e1407414, type: 3}
   tileDoubleBreakablePrefab: {fileID: 5461715903447065406, guid: 2508c0eab94986e468eab262861f7b0d, type: 3}
   adjacentBombPrefab: {fileID: 5751519444938394736, guid: 4200403df47c47c418a555245a9bf44c, type: 3}
+  colorBombPrefab: {fileID: 5544867806493613167, guid: 15e643e7ae2d2214bb905940b724299d, type: 3}
   columnBombPrefab: {fileID: 4038168604115784078, guid: 71a142492308b4e439bd8db61e633241, type: 3}
   rowBombPrefab: {fileID: 8989917482009704927, guid: cdb0dacb90038fd498bade2c1e94d06a, type: 3}
   gamePiecePrefabs:
@@ -177,6 +178,11 @@ MonoBehaviour:
   - {fileID: 3694498042805513533, guid: e1c78ae24314d7644ac08929e8554015, type: 3}
   - {fileID: 3774476922422366930, guid: a0c121fc1cec11f4faacb212ff0ed308, type: 3}
   - {fileID: 8011044252174811526, guid: 604e95cc2da3d2e4a82792f67e7d7e18, type: 3}
+  collectiblePrefabs:
+  - {fileID: 6090550897337259979, guid: 103ae047806429f4e8e3f028762bc0ae, type: 3}
+  maxCollectibles: 3
+  collectibleCount: 0
+  chanceForCollectible: 1
   colorValues:
   - match: 0
     color: {r: 0.9686275, g: 0.8313726, b: 0.10588236, a: 1}
@@ -323,6 +329,7 @@ MonoBehaviour:
   clearFX: {fileID: 4201036345098652328, guid: cbe562073071d094cbdf8c8f7dd08315, type: 3}
   breakFX: {fileID: 6702400251891065740, guid: 7caa0a6f5913abc468e1eb93e0408fc8, type: 3}
   doubleBreakFX: {fileID: 5658654637107024566, guid: adf806a98766d6e41887345b5a9cbe7d, type: 3}
+  bombFX: {fileID: 8648367615448119590, guid: e456e5a068fad404297ad9b6d1c3afec, type: 3}
 --- !u!4 &704096994
 Transform:
   m_ObjectHideFlags: 0
@@ -553,20 +560,28 @@ MonoBehaviour:
   _clickedTile: {fileID: 0}
   _targetTile: {fileID: 0}
   startingPieces:
-  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
     x: 2
     y: 3
     z: 0
-  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
     x: 2
     y: 2
     z: 0
-  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
     x: 2
     y: 0
     z: 0
-  - prefab: {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
+  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
     x: 3
+    y: 1
+    z: 0
+  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
+    x: 2
+    y: 4
+    z: 0
+  - prefab: {fileID: 5544867806493613167, guid: 15e643e7ae2d2214bb905940b724299d, type: 3}
+    x: 0
     y: 1
     z: 0
 --- !u!1 &1802371946

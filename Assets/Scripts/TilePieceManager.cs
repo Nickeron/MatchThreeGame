@@ -12,9 +12,15 @@ public class TilePieceManager : SerializedMonoBehaviour
     [BoxGroup("Tiles")]
     public GameObject tileNormalPrefab, tileObstaclePrefab, tileBreakablePrefab, tileDoubleBreakablePrefab;
     [BoxGroup("Bombs")]
-    public GameObject adjacentBombPrefab, columnBombPrefab, rowBombPrefab;
+    public GameObject adjacentBombPrefab, colorBombPrefab, columnBombPrefab, rowBombPrefab;
     [BoxGroup("Normal Game Pieces")]
     public GameObject[] gamePiecePrefabs;
+    [BoxGroup("Collectibles")]
+    public GameObject[] collectiblePrefabs;
+    [BoxGroup("Collectibles")]
+    public int maxCollectibles = 3, collectibleCount = 0;
+    [BoxGroup("Collectibles")] [Range(0,1)]
+    public float chanceForCollectible = 0.1f;
     [BoxGroup("Colors and Values")]
     [TableList]
     public List<ColorValue> colorValues = new List<ColorValue>();
@@ -38,13 +44,24 @@ public class TilePieceManager : SerializedMonoBehaviour
 
     internal GameObject GetRandomGamePiece()
     {
-        int randomIdx = Random.Range(0, gamePiecePrefabs.Length);
+        return GetRandomObject(gamePiecePrefabs);
+    }
 
-        if (gamePiecePrefabs[randomIdx] == null)
+    internal GameObject GetRandomCollectible()
+    {
+        collectibleCount++;
+        return GetRandomObject(collectiblePrefabs);
+    }
+
+    private GameObject GetRandomObject(GameObject[] objects)
+    {
+        int randomIdx = Random.Range(0, objects.Length);
+
+        if (objects[randomIdx] == null)
         {
-            Debug.LogWarning($"TilePieceManager: {randomIdx} does not contain a valid Gamepiece prefab");
+            Debug.LogWarning($"TilePieceManager: {objects} at {randomIdx} does not contain a valid prefab");
         }
-        return gamePiecePrefabs[randomIdx];
+        return objects[randomIdx];
     }
 
     internal ColorValue GetRandomColorValue()
@@ -61,6 +78,18 @@ public class TilePieceManager : SerializedMonoBehaviour
     internal Color GetColor(MatchValue match)
     {
         return colorValues.FirstOrDefault(c => c.match == match).color;
+    }
+
+    internal bool CanAddCollectible()
+    {
+        return (Random.Range(0f, 1f) <= chanceForCollectible &&
+                collectiblePrefabs.Count() > 0 &&
+                collectibleCount < maxCollectibles);
+    }
+
+    internal void Collected(int collectedCount)
+    {
+        collectibleCount -= collectedCount;
     }
 }
 

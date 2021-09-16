@@ -62,7 +62,7 @@ public class GamePiece : MonoBehaviour
 
         while (!reachedDestination)
         {
-            if (Vector3.Distance(transform.position, destination) < 0.01f)
+            if (Vector3.Distance(transform.position, destination) < 0.05f)
             {
                 reachedDestination = true;
 
@@ -137,5 +137,6 @@ public enum MatchValue
     Teal,
     Red,
     Cyan,
-    Wild
+    Wild,
+    None
 }
