@@ -181,7 +181,7 @@ public class Board : MonoBehaviour
 
                         while (HasMatchOnFill(i, j))
                         {
-                            ClearPieceAt(i, j);
+                            ClearPieceAt(i, j, wasChosen: false);
                             FillRandomAt(i, j, falseOffset, fallTime);
 
                             iterations++;
@@ -335,7 +335,6 @@ public class Board : MonoBehaviour
                     //Debug.Log($"{gamePiece.transform.position.y - (float)gamePiece.yIndex}");
                     return false;
                 }
-                gamePiece.transform.position = new Vector2(gamePiece.transform.position.x, gamePiece.yIndex);
             }
         }
         return true;
@@ -612,14 +611,16 @@ public class Board : MonoBehaviour
         return coloredPieces;
     }
 
-    List<GamePiece> FindCollectiblesAt(int row)
+    List<GamePiece> FindCollectiblesAt(int row, bool clearedAtBottomOnly = false)
     {
         List<GamePiece> foundCollectibles = new List<GamePiece>();
 
         for (int i = 0; i < _lvlBoard.width; i++)
         {
-            if (_allGamePieces[i, row] != null && _allGamePieces[i, row].GetComponent<Collectible>() != null)
+            Collectible collectible = _allGamePieces[i, row]?.GetComponent<Collectible>();
+            if (_allGamePieces[i, row] != null && collectible != null)
             {
+                if(!clearedAtBottomOnly || collectible.clearedAtBottom)
                 foundCollectibles.Add(_allGamePieces[i, row]);
             }
         }
@@ -694,12 +695,13 @@ public class Board : MonoBehaviour
     #endregion HIGHLIGHT
 
     #region CLEARING
-    void ClearPieceAt(int x, int y)
+    void ClearPieceAt(int x, int y, bool wasChosen = true)
     {
         GamePiece pieceToClear = _allGamePieces[x, y];
 
         if (pieceToClear != null)
         {
+            pieceToClear.Initialized(wasChosen);
             _allGamePieces[x, y] = null;
             Destroy(pieceToClear.gameObject);
         }
@@ -712,7 +714,10 @@ public class Board : MonoBehaviour
         {
             if (piece != null)
             {
-                ClearPieceAt(piece.xIndex, piece.yIndex);
+                ScoreManager.Instance.CalculateBonus(gamePieces.Count);
+
+                ClearPieceAt(piece.xIndex, piece.yIndex);               
+
                 _particleManager?.ClearPieceFXAt(piece.xIndex, piece.yIndex, isBomb: bombedPieces.Contains(piece));
             }
         }
@@ -803,9 +808,11 @@ public class Board : MonoBehaviour
         _playerInputEnabled = false;
 
         List<GamePiece> matches = gamePieces;
+        ScoreManager.Instance.ResetMultiplier();
 
         do
         {
+            ScoreManager.Instance.IncreaseMultiplier();
             yield return StartCoroutine(ClearAndCollapseRoutine(matches));
 
             yield return StartCoroutine(RefillRoutine());
@@ -826,9 +833,9 @@ public class Board : MonoBehaviour
 
         yield return new WaitForSeconds(delayBetweenMoves);
 
-        bool isFinished = false;
+        int tries = 5;
 
-        while (!isFinished)
+        while (tries > 0)
         {
             // Checking for bombs as well!
             var bombPieces = GetBombedPieces(gamePieces);
@@ -854,23 +861,20 @@ public class Board : MonoBehaviour
             yield return new WaitForSeconds(delayBetweenMoves);
 
             matches = FindMatchesAt(movingPieces);
-            // Checking for COLLECTIBLES at the bottom row
-            var collectedPieces = FindCollectiblesAt(0);
-            TilePieceManager.Instance.Collected(collectedPieces.Count);
-            Debug.Log($"Checked for collectibles at 0. Found {collectedPieces.Count}");
 
-            // Add those to be cleared
-            matches = matches.Union(collectedPieces).ToList();
+            // Checking for COLLECTIBLES at the bottom row
+            matches = matches.Union(FindCollectiblesAt(0, true)).ToList();
             Debug.Log($"Found {matches.Count} new matches!");
 
             if (matches.Count == 0)
             {
                 Debug.Log("No other matches found!");
-                isFinished = true;
                 break;
             }
             else
             {
+                tries--;
+                ScoreManager.Instance.IncreaseMultiplier();
                 yield return StartCoroutine(ClearAndCollapseRoutine(matches));
             }
         }

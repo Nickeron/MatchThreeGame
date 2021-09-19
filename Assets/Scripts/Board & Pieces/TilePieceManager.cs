@@ -49,7 +49,6 @@ public class TilePieceManager : SerializedMonoBehaviour
 
     internal GameObject GetRandomCollectible()
     {
-        collectibleCount++;
         return GetRandomObject(collectiblePrefabs);
     }
 
@@ -87,9 +86,14 @@ public class TilePieceManager : SerializedMonoBehaviour
                 collectibleCount < maxCollectibles);
     }
 
-    internal void Collected(int collectedCount)
+    internal void CollectibleCreated()
     {
-        collectibleCount -= collectedCount;
+        collectibleCount++;
+    }
+
+    internal void CollectibleCollected()
+    {
+        collectibleCount--;
     }
 }
 

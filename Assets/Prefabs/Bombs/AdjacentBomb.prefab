@@ -99,6 +99,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xIndex: 0
   yIndex: 0
+  scoreValue: 1000
   interpolation: 4
   matchValue: 8
   type: 3
