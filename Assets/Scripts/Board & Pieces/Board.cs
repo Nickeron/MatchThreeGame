@@ -26,7 +26,7 @@ public class Board : MonoBehaviour
     GameObject _clickedTileBomb;
     GameObject _targetTileBomb;
 
-    private LevelBoardSO _lvlBoard;
+    internal static LevelBoardSO lvlBoard;
     private ParticleManager _particleManager;
     private const string BOARD_LOCATION = "SO/BoardLvl_";
     private int currentLevel = 1;
@@ -38,43 +38,45 @@ public class Board : MonoBehaviour
 
     void Start()
     {
-        _allTiles = new Tile[_lvlBoard.width, _lvlBoard.height];
-        _allGamePieces = new GamePiece[_lvlBoard.width, _lvlBoard.height];
-
-        SetupTiles();
-        SetupGamePieces();
-        SetupCamera();
-        FillBoard(fillYOffset, fillFallTime);
-
+        _allTiles = new Tile[lvlBoard.width, lvlBoard.height];
+        _allGamePieces = new GamePiece[lvlBoard.width, lvlBoard.height];
         _particleManager = FindObjectOfType<ParticleManager>();
     }
 
     #region SETUP
+    internal void SetupBoard()
+    {
+        SetupTiles();
+        SetupGamePieces();
+        SetupCamera();
+        FillBoard(fillYOffset, fillFallTime);
+    }
+
     void LoadBoardForLevel()
     {
-        _lvlBoard = Resources.Load($"{BOARD_LOCATION}{currentLevel}") as LevelBoardSO;
+        lvlBoard = Resources.Load($"{BOARD_LOCATION}{currentLevel}") as LevelBoardSO;
     }
     void SetupCamera()
     {
-        float horizCenter = (_lvlBoard.height - 1) / 2f;
-        float vertiCenter = (_lvlBoard.width - 1) / 2f;
+        float horizCenter = (lvlBoard.height - 1) / 2f;
+        float vertiCenter = (lvlBoard.width - 1) / 2f;
 
         Camera.main.transform.position = new Vector3(vertiCenter, horizCenter, -10f);
 
         float aspectRatio = (float)Screen.width / (float)Screen.height;
-        float verticalSize = (float)_lvlBoard.height / 2f + (float)borderSize;
-        float horizontalSize = ((float)_lvlBoard.width / 2f + (float)borderSize) / aspectRatio;
+        float verticalSize = (float)lvlBoard.height / 2f + (float)borderSize;
+        float horizontalSize = ((float)lvlBoard.width / 2f + (float)borderSize) / aspectRatio;
 
         Camera.main.orthographicSize = (verticalSize > horizontalSize) ? verticalSize : horizontalSize;
     }
 
     void SetupTiles()
     {
-        for (int x = 0; x < _lvlBoard.width; x++)
+        for (int x = 0; x < lvlBoard.width; x++)
         {
-            for (int y = 0; y < _lvlBoard.height; y++)
+            for (int y = 0; y < lvlBoard.height; y++)
             {
-                CreateTile(TilePieceManager.Instance.GetProperPiece(_lvlBoard.startingBoard[x, y]), x, y, 0);
+                CreateTile(TilePieceManager.Instance.GetProperPiece(lvlBoard.startingBoard[x, y]), x, y, 0);
             }
         }
     }
@@ -163,14 +165,14 @@ public class Board : MonoBehaviour
     {
         int maxIterations = 100;
 
-        for (int i = 0; i < _lvlBoard.width; i++)
+        for (int i = 0; i < lvlBoard.width; i++)
         {
-            for (int j = 0; j < _lvlBoard.height; j++)
+            for (int j = 0; j < lvlBoard.height; j++)
             {
                 if (IsSpaceAvailable(i, j))
                 {
                     // Fill the position with a collectible depending on the conditions
-                    if (j == _lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
+                    if (j == lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
                         FillRandomAt(i, j, falseOffset, fallTime, isCollectible: true);
 
                     // Otherwise fill the position with a regular gamepiece
@@ -289,7 +291,7 @@ public class Board : MonoBehaviour
     #region CHECKS
     bool IsWithinBounds(int x, int y)
     {
-        return (x >= 0 && y >= 0 && x < _lvlBoard.width && y < _lvlBoard.height);
+        return (x >= 0 && y >= 0 && x < lvlBoard.width && y < lvlBoard.height);
     }
 
     bool IsSpaceAvailable(int x, int y, bool notNull = false)
@@ -451,7 +453,7 @@ public class Board : MonoBehaviour
                     targetPiece.Move(targetTile.xIndex, targetTile.yIndex, swapTime);
                 }
                 else
-                {
+                {                    
                     yield return new WaitForSeconds(swapTime);
 
                     Vector2 swipeDirection = new Vector2(targetTile.xIndex - clickedTile.xIndex, targetTile.yIndex - clickedTile.yIndex);
@@ -461,6 +463,7 @@ public class Board : MonoBehaviour
                     _targetTileBomb = InsertBomb(targetTile, swipeDirection, targetPieceMatches, clickedPiece);
 
                     ClearAndRefillBoard(clickedPieceMatches.Union(targetPieceMatches).Union(coloredBombMatches).ToList());
+                    GameManager.Instance?.UserPlayed();
                 }
             }
         }
@@ -487,7 +490,7 @@ public class Board : MonoBehaviour
             return null;
         }
 
-        int nextX, nextY, maxValue = _lvlBoard.width > _lvlBoard.height ? _lvlBoard.width : _lvlBoard.height;
+        int nextX, nextY, maxValue = lvlBoard.width > lvlBoard.height ? lvlBoard.width : lvlBoard.height;
 
         for (int i = 1; i < maxValue - 1; i++)
         {
@@ -582,9 +585,9 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> combinedMatches = new List<GamePiece>();
 
-        for (int i = 0; i < _lvlBoard.width; i++)
+        for (int i = 0; i < lvlBoard.width; i++)
         {
-            for (int j = 0; j < _lvlBoard.height; j++)
+            for (int j = 0; j < lvlBoard.height; j++)
             {
                 List<GamePiece> matches = FindMatchesAt(i, j);
                 combinedMatches.Union(matches).ToList();
@@ -598,9 +601,9 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> coloredPieces = new List<GamePiece>();
 
-        for (int i = 0; i < _lvlBoard.width; i++)
+        for (int i = 0; i < lvlBoard.width; i++)
         {
-            for (int j = 0; j < _lvlBoard.height; j++)
+            for (int j = 0; j < lvlBoard.height; j++)
             {
                 if (_allGamePieces[i, j] != null && _allGamePieces[i, j].matchValue == colorValue)
                 {
@@ -615,13 +618,13 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> foundCollectibles = new List<GamePiece>();
 
-        for (int i = 0; i < _lvlBoard.width; i++)
+        for (int i = 0; i < lvlBoard.width; i++)
         {
             Collectible collectible = _allGamePieces[i, row]?.GetComponent<Collectible>();
             if (_allGamePieces[i, row] != null && collectible != null)
             {
-                if(!clearedAtBottomOnly || collectible.clearedAtBottom)
-                foundCollectibles.Add(_allGamePieces[i, row]);
+                if (!clearedAtBottomOnly || collectible.clearedAtBottom)
+                    foundCollectibles.Add(_allGamePieces[i, row]);
             }
         }
         Debug.Log($"Found {foundCollectibles.Count} collectibles at {row}");
@@ -632,7 +635,7 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> foundCollectibles = new List<GamePiece>();
 
-        for (int y = 0; y < _lvlBoard.height; y++)
+        for (int y = 0; y < lvlBoard.height; y++)
         {
             foundCollectibles = foundCollectibles.Union(FindCollectiblesAt(y)).ToList();
         }
@@ -673,9 +676,9 @@ public class Board : MonoBehaviour
 
     void HighlightAllMatches()
     {
-        for (int i = 0; i < _lvlBoard.width; i++)
+        for (int i = 0; i < lvlBoard.width; i++)
         {
-            for (int j = 0; j < _lvlBoard.height; j++)
+            for (int j = 0; j < lvlBoard.height; j++)
             {
                 HighlightMatchesAt(i, j);
             }
@@ -716,7 +719,7 @@ public class Board : MonoBehaviour
             {
                 ScoreManager.Instance.CalculateBonus(gamePieces.Count);
 
-                ClearPieceAt(piece.xIndex, piece.yIndex);               
+                ClearPieceAt(piece.xIndex, piece.yIndex);
 
                 _particleManager?.ClearPieceFXAt(piece.xIndex, piece.yIndex, isBomb: bombedPieces.Contains(piece));
             }
@@ -725,9 +728,9 @@ public class Board : MonoBehaviour
 
     void ClearBoard()
     {
-        for (int i = 0; i < _lvlBoard.width; i++)
+        for (int i = 0; i < lvlBoard.width; i++)
         {
-            for (int j = 0; j < _lvlBoard.height; j++)
+            for (int j = 0; j < lvlBoard.height; j++)
             {
                 ClearPieceAt(i, j);
             }
@@ -759,11 +762,11 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> movingPieces = new List<GamePiece>();
 
-        for (int i = 0; i < _lvlBoard.height - 1; i++)
+        for (int i = 0; i < lvlBoard.height - 1; i++)
         {
             if (IsSpaceAvailable(column, i))
             {
-                for (int j = i + 1; j < _lvlBoard.height; j++)
+                for (int j = i + 1; j < lvlBoard.height; j++)
                 {
                     if (_allGamePieces[column, j] != null)
                     {
@@ -843,7 +846,7 @@ public class Board : MonoBehaviour
 
             // Doing it twice, to enable CHAIN BOMBS!!
             bombPieces = GetBombedPieces(gamePieces);
-            gamePieces = gamePieces.Union(bombPieces).ToList();           
+            gamePieces = gamePieces.Union(bombPieces).ToList();
 
             ClearPieceAt(gamePieces, bombPieces);
             BreakTileAt(gamePieces);
@@ -910,7 +913,7 @@ public class Board : MonoBehaviour
     {
         List<GamePiece> gamePieces = new List<GamePiece>();
 
-        int limit = isRow ? _lvlBoard.width : _lvlBoard.height;
+        int limit = isRow ? lvlBoard.width : lvlBoard.height;
 
         for (int index = 0; index < limit; index++)
         {

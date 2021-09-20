@@ -8,6 +8,10 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "LevelBoard", fileName ="BoardLvl_1")]
 public class LevelBoardSO : SerializedScriptableObject
 {
+    [BoxGroup("Name")]
+    [PropertyRange(1, 500)]
+    public int levelNumber = 1;
+
     [BoxGroup("Size")]
     [OnValueChanged(nameof(SetBoardSize))]
     [PropertyRange(5, 25)]
