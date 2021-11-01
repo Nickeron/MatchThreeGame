@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class Board : MonoBehaviour
 {
+    public static event Action IncreaseBonus;
+
     public int borderSize = 0;
     public int fillYOffset = 10;
     public float fillFallTime = 0.1f;
@@ -29,7 +31,7 @@ public class Board : MonoBehaviour
     internal static LevelBoardSO lvlBoard;
     private ParticleManager _particleManager;
     private const string BOARD_LOCATION = "SO/BoardLvl_";
-    private int currentLevel = 1;
+    private readonly int currentLevel = 1;   
 
     private void Awake()
     {
@@ -627,7 +629,7 @@ public class Board : MonoBehaviour
                     foundCollectibles.Add(_allGamePieces[i, row]);
             }
         }
-        Debug.Log($"Found {foundCollectibles.Count} collectibles at {row}");
+        //Debug.Log($"Found {foundCollectibles.Count} collectibles at {row}");
         return foundCollectibles;
     }
 
@@ -815,7 +817,7 @@ public class Board : MonoBehaviour
 
         do
         {
-            ScoreManager.Instance.IncreaseMultiplier();
+            IncreaseBonus?.Invoke();
             yield return StartCoroutine(ClearAndCollapseRoutine(matches));
 
             yield return StartCoroutine(RefillRoutine());
@@ -867,17 +869,17 @@ public class Board : MonoBehaviour
 
             // Checking for COLLECTIBLES at the bottom row
             matches = matches.Union(FindCollectiblesAt(0, true)).ToList();
-            Debug.Log($"Found {matches.Count} new matches!");
+            //Debug.Log($"Found {matches.Count} new matches!");
 
             if (matches.Count == 0)
             {
-                Debug.Log("No other matches found!");
+                //Debug.Log("No other matches found!");
                 break;
             }
             else
             {
                 tries--;
-                ScoreManager.Instance.IncreaseMultiplier();
+                IncreaseBonus?.Invoke();
                 yield return StartCoroutine(ClearAndCollapseRoutine(matches));
             }
         }

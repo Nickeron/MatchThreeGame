@@ -252,5 +252,6 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+  levelNumber: 1
   width: 8
   height: 9

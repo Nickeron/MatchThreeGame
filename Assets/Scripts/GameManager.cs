@@ -1,24 +1,47 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using Sirenix.OdinInspector;
+using UnityEngine.SceneManagement;
+using System;
 
-public class GameManager : Singleton<GameManager>
-{
+public class GameManager : Singleton<GameManager> 
+{ 
+    public static event Action<bool> GameOver;
     public int movesLeft = 30;
     public int scoreGoal = 1000;
 
-    public ScreenFader screenFader;
+    
     public TextMeshProUGUI txtLevelName, txtRemainingMoves;
 
-    private Board _board;
+    [BoxGroup("Message Window")]
+    public MessageWindow messageWindow;
 
-    private bool _isReadyToBegin = false, _isGameOver = false, _isWinner = false;
+    [HorizontalGroup("Message Window/Icons", LabelWidth = 50)]
+    public Sprite icnLose, icnWin, icnGoal;
+
+    [HideInInspector]
+    public int Level;
+
+    private Board _board;
+    private ScreenFader _screenFader;
+
+    private bool _isGameOver = false, _isWinner = false;
 
     private const string LEVEL_STRING = "Level";
 
-    // Start is called before the first frame update
     void Start()
     {
+        SetupGame(SceneManager.GetActiveScene());
+        SceneManager.sceneLoaded += SetupGame;
+    }
+
+    void SetupGame(Scene activeScene, LoadSceneMode loadMode = LoadSceneMode.Single)
+    {        
+        Level = PlayerPrefs.GetInt(LEVEL_STRING);
+        Debug.Log($"Starting Level {Level}");
+
+        _screenFader = FindObjectOfType<ScreenFader>().GetComponent<ScreenFader>();
         _board = FindObjectOfType<Board>().GetComponent<Board>();
 
         if (txtLevelName != null)
@@ -26,71 +49,113 @@ public class GameManager : Singleton<GameManager>
             txtLevelName.text = $"{LEVEL_STRING} {Board.lvlBoard?.levelNumber}";
         }
         UpdateMoves();
-        StartCoroutine(ExecuteGameLoop());
+
+        ActOnUserClick(StartTheGame);
+        DisplayMessage(icnGoal, $"Score Goal\n{scoreGoal}", "Start");
     }
 
     public void UserPlayed()
     {
         movesLeft--;
         UpdateMoves();
+        
+        // Check for game over
+        if(movesLeft == 0 && !_isGameOver)
+        {
+            _isGameOver = true;
+            _isWinner = false;
+
+            StartCoroutine(EndGameRoutine());
+        }
     }
 
     private void UpdateMoves()
     {
-        if(txtRemainingMoves != null)
+        if (txtRemainingMoves != null)
         {
             txtRemainingMoves.text = movesLeft.ToString();
         }
-    }
-
-    IEnumerator ExecuteGameLoop()
-    {
-        yield return StartCoroutine(StartGameRoutine());
-        yield return StartCoroutine(PlayGameRoutine());
-        yield return StartCoroutine(EndGameRoutine());
-    }
+    } 
 
     IEnumerator StartGameRoutine()
     {
-        while (!_isReadyToBegin)
-        {
-            yield return new WaitForSeconds(2f);
-            _isReadyToBegin = true;
-        }
-
-        screenFader?.FadeOff();
+        _screenFader?.FadeOff();
 
         yield return new WaitForSeconds(0.5f);
 
         _board?.SetupBoard();
+
+        ScoreManager.ScoredPoints += ScoredPoints;
     }
 
-    IEnumerator PlayGameRoutine()
+    void DisplayMessage(Sprite icon, string mainMessage, string btnMessage)
     {
-        while (!_isGameOver)
+        if (messageWindow != null)
         {
-            if (movesLeft == 0)
-            {
-                _isGameOver = true;
-                _isWinner = false;
-            }
-            yield return null;
+            messageWindow.GetComponent<RectXformMover>().MoveOn();
+            messageWindow.ShowMessage(icon, mainMessage, btnMessage);
+        }
+    }
+
+    void ScoredPoints(int newScore)
+    {
+        SoundManager.Instance.PlayBonusSound();
+
+        // Check for game over
+        if(newScore >= scoreGoal && !_isGameOver)
+        {
+            _isGameOver = true;
+            _isWinner = true;
+
+            StartCoroutine(EndGameRoutine());
+        }        
+    }
+
+    void ActOnUserClick(Action gameFunction)
+    {
+        if (messageWindow != null)
+        {
+            messageWindow.ButtonPressed += gameFunction;
+        }
+    }
+
+    void UnsubscribeFromActionList(Action gameFunction)
+    {
+        if (messageWindow != null)
+        {
+            messageWindow.ButtonPressed -= gameFunction;
         }
     }
 
     IEnumerator EndGameRoutine()
     {
-        screenFader?.FadeOn();
+        yield return new WaitForSeconds(2);
 
+        _screenFader?.FadeOn();
+        GameOver?.Invoke(_isWinner);
+        ActOnUserClick(LoadLevel);
         if (_isWinner)
         {
-            Debug.Log("YOU WIN!");
+            PlayerPrefs.SetInt(LEVEL_STRING, ++Level);
+            DisplayMessage(icnWin, $"You WIN!\n{scoreGoal}", "Next");          
         }
         else
-        {
-            Debug.Log("YOU LOSE!");
+        {            
+            DisplayMessage(icnLose, $"You lost..\n{scoreGoal}", "Replay");            
         }
 
         yield return null;
+    }
+
+    public void StartTheGame()
+    {
+        UnsubscribeFromActionList(StartTheGame);
+        StartCoroutine(StartGameRoutine());
+    }
+
+    void LoadLevel()
+    {
+        UnsubscribeFromActionList(LoadLevel);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

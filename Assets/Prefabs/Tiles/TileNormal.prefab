@@ -98,6 +98,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xIndex: 0
   yIndex: 0
+  type: 0
+  breakableValue: 0
+  breakableSprites: []
+  normalColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!61 &5612653070223893726
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -122,5 +126,5 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.5, y: 0.5}
+  m_Size: {x: 0.8, y: 0.8}
   m_EdgeRadius: 0

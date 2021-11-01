@@ -1,13 +1,14 @@
+using System;
 using System.Collections;
 
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
-public class GamePiece : MonoBehaviour
+public class GamePiece : Mover
 {
+    public static event Action<Vector3, int> PieceCleared;
     public int xIndex, yIndex, scoreValue = 20;
-
-    public InterpType interpolation = InterpType.SmootherStep;
+    
     public MatchValue matchValue;
 
     private Board _board;
@@ -67,27 +68,7 @@ public class GamePiece : MonoBehaviour
         _board?.PlaceGamePiece(this, (int)destination.x, (int)destination.y);
 
         _isMoving = false;
-    }
-
-    private float InterpolateTime(float elapsedTime, float timeToMove)
-    {
-        float t = Mathf.Clamp01(elapsedTime / timeToMove);
-
-        switch (interpolation)
-        {
-            case InterpType.Linear:
-                return t;
-            case InterpType.EaseOut:
-                return Mathf.Sin(t * Mathf.PI * 0.5f);
-            case InterpType.EaseIn:
-                return 1 - Mathf.Cos(t * Mathf.PI * 0.5f);
-            case InterpType.SmoothStep:
-                return t * t * (3 - 2 * t);
-            case InterpType.SmootherStep:
-                return t * t * t * (t * (t * 6 - 15) + 10);
-        }
-        return t;
-    }
+    }    
 
     public void SetColor(GamePiece matchObject)
     {
@@ -106,14 +87,6 @@ public class GamePiece : MonoBehaviour
         matchValue = newValue;
     }
 
-    private void ScorePoints()
-    {
-        if(ScoreManager.Instance != null)
-        {
-            ScoreManager.Instance.AddPoints(scoreValue);
-        }
-    }
-
     public void Initialized(bool isInitialized)
     {
         _initialized = isInitialized;
@@ -121,8 +94,10 @@ public class GamePiece : MonoBehaviour
 
     private void OnDestroy()
     {
-        if(_initialized)
-            ScorePoints();
+        if (_initialized)
+        {
+            PieceCleared?.Invoke(transform.position, scoreValue);
+        }            
     }
 }
 

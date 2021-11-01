@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,6 +6,7 @@ using UnityEngine.UI;
 
 public class ScoreManager : Singleton<ScoreManager>
 {
+    public static event Action<int> ScoredPoints;
     public int _multiBonus = 20;
     int _currentScore = 0, _counterValue = 0, _increment = 5;
     int _multiCain, _bonus;
@@ -14,6 +16,8 @@ public class ScoreManager : Singleton<ScoreManager>
     void Start()
     {
         UpdateScoreText(_currentScore);
+        GamePiece.PieceCleared += AddPoints;
+        Board.IncreaseBonus += IncreaseMultiplier;
     }
 
     void UpdateScoreText(int scoreValue)
@@ -22,6 +26,11 @@ public class ScoreManager : Singleton<ScoreManager>
         {
             txtScore.text = scoreValue.ToString();
         }
+    }
+
+    public bool CheckScore(int value)
+    {
+        return _currentScore >= value;
     }
 
     #region RESETS
@@ -42,10 +51,11 @@ public class ScoreManager : Singleton<ScoreManager>
         _multiCain++;
     }   
 
-    public void AddPoints(int value)
+    public void AddPoints(Vector3 _, int value)
     {
-        Debug.Log($"Adding {value} points to Score");
+        //Debug.Log($"Adding {value} points to Score, for piece cleared at {_}");
         _currentScore += (value * _multiCain) + _bonus;
+        ScoredPoints?.Invoke(_currentScore);
         StartCoroutine(CountScoreRoutine());
     }
     #endregion
