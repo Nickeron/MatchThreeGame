@@ -99,8 +99,6 @@ public class GameManager : Singleton<GameManager>
 
     void ScoredPoints(int newScore)
     {
-        SoundManager.Instance.PlayBonusSound();
-
         // Check for game over
         if(newScore >= scoreGoal && !_isGameOver)
         {

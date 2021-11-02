@@ -230,7 +230,7 @@ MonoBehaviour:
   tileBreakablePrefab: {fileID: 4250746380573251446, guid: bb83a9a6502c4954aad635d6e1407414, type: 3}
   tileDoubleBreakablePrefab: {fileID: 5461715903447065406, guid: 2508c0eab94986e468eab262861f7b0d, type: 3}
   adjacentBombPrefab: {fileID: 5751519444938394736, guid: 4200403df47c47c418a555245a9bf44c, type: 3}
-  colorBombPrefab: {fileID: 5544867806493613167, guid: 15e643e7ae2d2214bb905940b724299d, type: 3}
+  colorBombPrefab: {fileID: 1000013338762844, guid: 1a1602c69ff0542d7905e28330aca523, type: 3}
   columnBombPrefab: {fileID: 4038168604115784078, guid: 71a142492308b4e439bd8db61e633241, type: 3}
   rowBombPrefab: {fileID: 8989917482009704927, guid: cdb0dacb90038fd498bade2c1e94d06a, type: 3}
   gamePiecePrefabs:
@@ -243,8 +243,8 @@ MonoBehaviour:
   - {fileID: 3774476922422366930, guid: a0c121fc1cec11f4faacb212ff0ed308, type: 3}
   - {fileID: 8011044252174811526, guid: 604e95cc2da3d2e4a82792f67e7d7e18, type: 3}
   collectiblePrefabs:
-  - {fileID: 6090550897337259979, guid: 103ae047806429f4e8e3f028762bc0ae, type: 3}
-  - {fileID: 3895069824148051937, guid: 05195f5790a536b4ca43d129ed176c6f, type: 3}
+  - {fileID: 1000010844454024, guid: 3cc39e0b689e449179a99ac4144c4d3c, type: 3}
+  - {fileID: 1000011192920742, guid: 39d7e8803a8074f13adfcbe5567fefca, type: 3}
   maxCollectibles: 3
   collectibleCount: 0
   chanceForCollectible: 0.2
@@ -1159,10 +1159,6 @@ MonoBehaviour:
   - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
     x: 2
     y: 4
-    z: 0
-  - prefab: {fileID: 5544867806493613167, guid: 15e643e7ae2d2214bb905940b724299d, type: 3}
-    x: 0
-    y: 1
     z: 0
 --- !u!1 &1057022006
 GameObject:
