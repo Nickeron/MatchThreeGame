@@ -133,15 +133,11 @@ public class Board : MonoBehaviour
         return null;
     }
 
-    private GameObject CreateBomb(GameObject prefab, Tile pos)
+    private GameObject CreateBomb(Tile pos, BombType type, MatchValue match = MatchValue.Wild)
     {
-        if (prefab != null && IsWithinBounds(pos.xIndex, pos.yIndex))
+        if (IsWithinBounds(pos.xIndex, pos.yIndex))
         {
-            Bomb bombInstance = Instantiate(prefab, new Vector3(pos.xIndex, pos.yIndex, 0), Quaternion.identity).GetComponent<Bomb>();
-            bombInstance?.Init(this);
-            bombInstance?.SetCoord(pos.xIndex, pos.yIndex);
-            bombInstance.transform.parent = transform;
-            return bombInstance.gameObject;
+            return TilePieceManager.Instance.CreateBomb(pos, this, type, match);
         }
         return null;
     }
@@ -228,7 +224,7 @@ public class Board : MonoBehaviour
                 // Insert Adjacent Bomb
                 if (TilePieceManager.Instance.adjacentBombPrefab != null)
                 {
-                    bomb = CreateBomb(TilePieceManager.Instance.adjacentBombPrefab, pos);
+                    bomb = CreateBomb(pos, BombType.Adjacent, targetPiece.matchValue);
                 }
             }
             else
@@ -236,14 +232,14 @@ public class Board : MonoBehaviour
                 // Insert Color Bomb
                 if (gamePieces.Count >= 5 && TilePieceManager.Instance.colorBombPrefab != null)
                 {
-                    bomb = CreateBomb(TilePieceManager.Instance.colorBombPrefab, pos);
+                    bomb = CreateBomb(pos, BombType.Color);
                 }
                 else if (swapDirection.x != 0)
                 {
                     // Insert row bomb
                     if (TilePieceManager.Instance.rowBombPrefab != null)
                     {
-                        bomb = CreateBomb(TilePieceManager.Instance.rowBombPrefab, pos);
+                        bomb = CreateBomb(pos, BombType.Row, targetPiece.matchValue);
                     }
                 }
                 else
@@ -251,13 +247,10 @@ public class Board : MonoBehaviour
                     //Insert column bomb
                     if (TilePieceManager.Instance.columnBombPrefab != null)
                     {
-                        bomb = CreateBomb(TilePieceManager.Instance.columnBombPrefab, pos);
+                        bomb = CreateBomb(pos, BombType.Column, targetPiece.matchValue);
                     }
                 }
             }
-            GamePiece bombPiece = bomb.GetComponent<GamePiece>();
-            if (bombPiece != null && !IsColorBomb(bombPiece))
-                bombPiece.SetColor(targetPiece);
         }
         return bomb;
     }

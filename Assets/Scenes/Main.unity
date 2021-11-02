@@ -229,19 +229,39 @@ MonoBehaviour:
   tileObstaclePrefab: {fileID: 1612353546972030994, guid: 32204afcf83ee2f4288376bab5c81420, type: 3}
   tileBreakablePrefab: {fileID: 4250746380573251446, guid: bb83a9a6502c4954aad635d6e1407414, type: 3}
   tileDoubleBreakablePrefab: {fileID: 5461715903447065406, guid: 2508c0eab94986e468eab262861f7b0d, type: 3}
-  adjacentBombPrefab: {fileID: 5751519444938394736, guid: 4200403df47c47c418a555245a9bf44c, type: 3}
+  adjacentBombPrefab:
+  - {fileID: 1452975630026916, guid: 1dc7b4a635eee4b549f0814d0edb9f96, type: 3}
+  - {fileID: 1582761539138338, guid: d1b9bd69ce20946238d78d959914a26e, type: 3}
+  - {fileID: 1191681590145648, guid: 906f49d97f93b477489bd1849f2fb8c1, type: 3}
+  - {fileID: 1830951442441018, guid: fdbb51f6ad6d845aab3b4d2d03abd482, type: 3}
+  - {fileID: 1017203772300780, guid: a03dc1ba3686c43249803d14a0fd5ac1, type: 3}
+  - {fileID: 1486871965305524, guid: 419acdcadc50a4c448bf98d63ff96eb6, type: 3}
+  - {fileID: 1885492271152382, guid: a64e048dc8a8c42e6a7b2a2bf782fe2e, type: 3}
+  columnBombPrefab:
+  - {fileID: 1908514655826638, guid: ad3338ded80f54cf2bd1bea0c0fb442a, type: 3}
+  - {fileID: 1790440890349500, guid: 4a41b0bcc2bb04fcea7fb556dfb6414d, type: 3}
+  - {fileID: 1724156449574800, guid: 19a7732910c9c477faa1817d9173ac70, type: 3}
+  - {fileID: 1645854744761272, guid: 50f67aa52721c432292ab73e8c66e029, type: 3}
+  - {fileID: 1799463149390038, guid: f4570d1955bf44e5a965b20e1e4c0784, type: 3}
+  - {fileID: 1155086736675008, guid: b16155b21296c413ca8ae934bdb52497, type: 3}
+  - {fileID: 1539352131500558, guid: 33250037397c5421aa15ccfbad07bc81, type: 3}
+  rowBombPrefab:
+  - {fileID: 1653714453623224, guid: 5207ba130b8b3488fb3a9a1b290d0efb, type: 3}
+  - {fileID: 1544045371057092, guid: 622c9ee5c4d1549b88e79b05f6b0f66a, type: 3}
+  - {fileID: 1907005101510582, guid: 6f4de61a3d8da4e15b79a7404c1c644b, type: 3}
+  - {fileID: 1812521708440114, guid: 9c5823e577fcb4da09754ec71ead0d63, type: 3}
+  - {fileID: 1819874243754648, guid: 904197c7b70654987882987758dc32e6, type: 3}
+  - {fileID: 1204806815848130, guid: 27d221c0220a340f9b8f7d8b7fcb5a25, type: 3}
+  - {fileID: 1943580077875270, guid: 0c945f22ccdb94d759ebc151932a5581, type: 3}
   colorBombPrefab: {fileID: 1000013338762844, guid: 1a1602c69ff0542d7905e28330aca523, type: 3}
-  columnBombPrefab: {fileID: 4038168604115784078, guid: 71a142492308b4e439bd8db61e633241, type: 3}
-  rowBombPrefab: {fileID: 8989917482009704927, guid: cdb0dacb90038fd498bade2c1e94d06a, type: 3}
   gamePiecePrefabs:
-  - {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
-  - {fileID: 1116451609276819522, guid: 3a2f4998481e3354ebc471c5261899eb, type: 3}
-  - {fileID: 2814986678320598371, guid: f71e2d43899e7b54db217f024400cfb2, type: 3}
-  - {fileID: 19137997868423444, guid: f0ef0ef0af55ab2489a80e8061c19cc6, type: 3}
-  - {fileID: 6143495670160315423, guid: 1ab3677a1c0e73441b0db194b7f9a989, type: 3}
-  - {fileID: 3694498042805513533, guid: e1c78ae24314d7644ac08929e8554015, type: 3}
-  - {fileID: 3774476922422366930, guid: a0c121fc1cec11f4faacb212ff0ed308, type: 3}
-  - {fileID: 8011044252174811526, guid: 604e95cc2da3d2e4a82792f67e7d7e18, type: 3}
+  - {fileID: 1764584299026588, guid: d25f2e53e91ce49bd99d368bec39987a, type: 3}
+  - {fileID: 1616169278628932, guid: d8220af17d71d4a7b91d94fdb37f90e0, type: 3}
+  - {fileID: 1664362004353522, guid: ded3823fda2b64d07a29783e0ce9acc9, type: 3}
+  - {fileID: 1282329895864240, guid: 16eff60049fa742e09c4e037182057a2, type: 3}
+  - {fileID: 1836425604369276, guid: 7471f6d24260942c499dd3fbbeccadc6, type: 3}
+  - {fileID: 1372902284518312, guid: ddd7ecb364d034ad295c2ea9c8df1999, type: 3}
+  - {fileID: 1161606897531048, guid: 805c5ac8742f1457bb6137a92eef3032, type: 3}
   collectiblePrefabs:
   - {fileID: 1000010844454024, guid: 3cc39e0b689e449179a99ac4144c4d3c, type: 3}
   - {fileID: 1000011192920742, guid: 39d7e8803a8074f13adfcbe5567fefca, type: 3}
@@ -358,7 +378,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movesLeft: 20
-  scoreGoal: 1000
+  scoreGoal: 5000
   txtLevelName: {fileID: 1516386992}
   txtRemainingMoves: {fileID: 2103940814}
   messageWindow: {fileID: 728732530}
@@ -1139,27 +1159,7 @@ MonoBehaviour:
   swapTime: 0.3
   _clickedTile: {fileID: 0}
   _targetTile: {fileID: 0}
-  startingPieces:
-  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
-    x: 2
-    y: 3
-    z: 0
-  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
-    x: 2
-    y: 2
-    z: 0
-  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
-    x: 2
-    y: 0
-    z: 0
-  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
-    x: 3
-    y: 1
-    z: 0
-  - prefab: {fileID: 2032615273616175677, guid: 0245418db0842334d9b715d0dd80b805, type: 3}
-    x: 2
-    y: 4
-    z: 0
+  startingPieces: []
 --- !u!1 &1057022006
 GameObject:
   m_ObjectHideFlags: 0

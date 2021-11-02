@@ -12,14 +12,17 @@ public class TilePieceManager : SerializedMonoBehaviour
     [BoxGroup("Tiles")]
     public GameObject tileNormalPrefab, tileObstaclePrefab, tileBreakablePrefab, tileDoubleBreakablePrefab;
     [BoxGroup("Bombs")]
-    public GameObject adjacentBombPrefab, colorBombPrefab, columnBombPrefab, rowBombPrefab;
+    public GameObject[] adjacentBombPrefab, columnBombPrefab, rowBombPrefab;
+    [BoxGroup("Bombs")]
+    public GameObject colorBombPrefab;
     [BoxGroup("Normal Game Pieces")]
     public GameObject[] gamePiecePrefabs;
     [BoxGroup("Collectibles")]
     public GameObject[] collectiblePrefabs;
     [BoxGroup("Collectibles")]
     public int maxCollectibles = 3, collectibleCount = 0;
-    [BoxGroup("Collectibles")] [Range(0,1)]
+    [BoxGroup("Collectibles")]
+    [Range(0, 1)]
     public float chanceForCollectible = 0.1f;
     [BoxGroup("Colors and Values")]
     [TableList]
@@ -33,7 +36,7 @@ public class TilePieceManager : SerializedMonoBehaviour
     internal GameObject GetProperPiece(TileType tileType)
     {
         switch (tileType)
-        {            
+        {
             case TileType.Normal: return tileNormalPrefab;
             case TileType.Obstacle: return tileObstaclePrefab;
             case TileType.Breakable: return tileBreakablePrefab;
@@ -61,6 +64,42 @@ public class TilePieceManager : SerializedMonoBehaviour
             Debug.LogWarning($"TilePieceManager: {objects} at {randomIdx} does not contain a valid prefab");
         }
         return objects[randomIdx];
+    }
+
+    public GameObject CreateBomb(Tile pos, Board board, BombType type, MatchValue match)
+    {
+        Bomb bombInstance = Instantiate(GetBombByType(type, match), 
+            new Vector3(pos.xIndex, pos.yIndex, 0), 
+            Quaternion.identity)
+            .GetComponent<Bomb>();
+
+        bombInstance?.Init(board);
+        bombInstance?.SetCoord(pos.xIndex, pos.yIndex);
+        bombInstance.transform.parent = board.transform;
+        return bombInstance.gameObject;
+    }
+
+    private GameObject GetBombByType(BombType type, MatchValue match)
+    {
+        switch (type)
+        {
+            case BombType.Column:
+                return GetBombByValue(columnBombPrefab, match);
+            case BombType.Row:
+                return GetBombByValue(rowBombPrefab, match);
+            case BombType.Adjacent:
+                return GetBombByValue(adjacentBombPrefab, match);
+            case BombType.Color:
+                return colorBombPrefab;
+            case BombType.None:
+            default:
+                return null;
+        }
+    }
+
+    private GameObject GetBombByValue(GameObject[] bombsOfType, MatchValue match)
+    {
+        return bombsOfType?.FirstOrDefault(x => x.GetComponent<GamePiece>().matchValue == match);
     }
 
     internal ColorValue GetRandomColorValue()
@@ -101,5 +140,5 @@ public class TilePieceManager : SerializedMonoBehaviour
 public class ColorValue
 {
     public MatchValue match;
-    public Color color = Color.white;    
+    public Color color = Color.white;
 }
