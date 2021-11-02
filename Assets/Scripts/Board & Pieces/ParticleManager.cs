@@ -6,14 +6,20 @@ public class ParticleManager : MonoBehaviour
 {
     public GameObject clearFX, breakFX, doubleBreakFX, bombFX;
 
+    private void Start()
+    {
+        Board.OnPieceCleared += ClearPieceFXAt;
+        Board.OnTileBroke += BreakTileFXAt;
+    }
+
     public void ClearPieceFXAt(int x, int y, int z = 0, bool isBomb = false)
     {
         PlayFXAt(isBomb? bombFX : clearFX, new Vector3(x, y, z));
     }
 
-    public void BreakTileFXAt(int breakableValue, int x, int y, int z = 0)
+    public void BreakTileFXAt(int breakableValue, int x, int y)
     {
-        PlayFXAt(breakableValue > 1? doubleBreakFX : breakFX, new Vector3(x, y, z));
+        PlayFXAt(breakableValue > 1? doubleBreakFX : breakFX, new Vector3(x, y, 0));
     }
 
     public void BombFXAt(int x, int y, int z = 0)
@@ -27,5 +33,11 @@ public class ParticleManager : MonoBehaviour
         {
             Instantiate(FX, position, Quaternion.identity).GetComponent<ParticlePlayer>()?.Play();
         }
+    }
+
+    private void OnDestroy()
+    {
+        Board.OnPieceCleared -= ClearPieceFXAt;
+        Board.OnTileBroke -= BreakTileFXAt;
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 
 using UnityEngine;
 
+[RequireComponent(typeof(BoardDeadlock))]
 public class Board : MonoBehaviour
 {
     public static event Action IncreaseBonus;
@@ -21,7 +22,13 @@ public class Board : MonoBehaviour
     public Tile _clickedTile;
     public Tile _targetTile;
 
+    BoardDeadlock _deadlock;
+
     bool _playerInputEnabled = true;
+    public bool isRefilling { get; private set;} = false;
+
+    public static Action<int, int, int, bool> OnPieceCleared { get; internal set; }
+    public static Action<int, int, int> OnTileBroke { get; internal set; }
 
     public StartingObject[] startingPieces;
 
@@ -29,7 +36,7 @@ public class Board : MonoBehaviour
     GameObject _targetTileBomb;
 
     internal static LevelBoardSO lvlBoard;
-    private ParticleManager _particleManager;
+    
     private const string BOARD_LOCATION = "SO/BoardLvl_";
     private readonly int currentLevel = 1;   
 
@@ -42,7 +49,7 @@ public class Board : MonoBehaviour
     {
         _allTiles = new Tile[lvlBoard.width, lvlBoard.height];
         _allGamePieces = new GamePiece[lvlBoard.width, lvlBoard.height];
-        _particleManager = FindObjectOfType<ParticleManager>();
+
     }
 
     #region SETUP
@@ -284,6 +291,7 @@ public class Board : MonoBehaviour
     #endregion INSERT
 
     #region CHECKS
+
     bool IsWithinBounds(int x, int y)
     {
         return (x >= 0 && y >= 0 && x < lvlBoard.width && y < lvlBoard.height);
@@ -588,7 +596,7 @@ public class Board : MonoBehaviour
                 combinedMatches.Union(matches).ToList();
             }
         }
-
+        //Debug.Log($"Found {combinedMatches.Count} matches!");
         return combinedMatches;
     }
 
@@ -716,7 +724,7 @@ public class Board : MonoBehaviour
 
                 ClearPieceAt(piece.xIndex, piece.yIndex);
 
-                _particleManager?.ClearPieceFXAt(piece.xIndex, piece.yIndex, isBomb: bombedPieces.Contains(piece));
+                OnPieceCleared?.Invoke(piece.xIndex, piece.yIndex, 0, bombedPieces.Contains(piece));
             }
         }
     }
@@ -737,7 +745,7 @@ public class Board : MonoBehaviour
         Tile breakableTile = _allTiles[x, y];
         if (breakableTile != null)
         {
-            _particleManager?.BreakTileFXAt(breakableTile.breakableValue, x, y);
+            OnTileBroke?.Invoke(breakableTile.breakableValue, x, y);
             breakableTile.BreakTile();
         }
     }
@@ -783,10 +791,9 @@ public class Board : MonoBehaviour
         return movingPieces;
     }
 
-    List<GamePiece> CollapseColumn(List<GamePiece> gamePieces)
+    List<GamePiece> CollapseColumn(List<int> collapsingColumns)
     {
         List<GamePiece> movingPieces = new List<GamePiece>();
-        List<int> collapsingColumns = GetColumns(gamePieces);
 
         foreach (int col in collapsingColumns)
         {
@@ -804,6 +811,7 @@ public class Board : MonoBehaviour
     IEnumerator ClearAndRefillBoardRoutine(List<GamePiece> gamePieces)
     {
         _playerInputEnabled = false;
+        isRefilling = true;
 
         List<GamePiece> matches = gamePieces;
         ScoreManager.Instance.ResetMultiplier();
@@ -819,7 +827,8 @@ public class Board : MonoBehaviour
         }
         while (matches.Count > 0);
 
-        _playerInputEnabled = true;
+        isRefilling = false;
+        _playerInputEnabled = !GameManager.isGameOver;
     }
 
     IEnumerator ClearAndCollapseRoutine(List<GamePiece> gamePieces, float delayBetweenMoves = 0.2f)
@@ -843,13 +852,17 @@ public class Board : MonoBehaviour
             bombPieces = GetBombedPieces(gamePieces);
             gamePieces = gamePieces.Union(bombPieces).ToList();
 
+            // We track the collapsing columns before clearing, so that
+            // we don't get a null reference
+            List<int> collapsingColumns = GetColumns(gamePieces);
+
             ClearPieceAt(gamePieces, bombPieces);
             BreakTileAt(gamePieces);
             EnablePossibleBombs();
 
             yield return new WaitForSeconds(delayBetweenMoves);
 
-            movingPieces = CollapseColumn(gamePieces);
+            movingPieces = CollapseColumn(collapsingColumns);
 
             while (!IsCollapsed(movingPieces))
             {

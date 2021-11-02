@@ -5,13 +5,13 @@ using Sirenix.OdinInspector;
 using UnityEngine.SceneManagement;
 using System;
 
-public class GameManager : Singleton<GameManager> 
-{ 
+public class GameManager : Singleton<GameManager>
+{
     public static event Action<bool> GameOver;
     public int movesLeft = 30;
     public int scoreGoal = 1000;
 
-    
+
     public TextMeshProUGUI txtLevelName, txtRemainingMoves;
 
     [BoxGroup("Message Window")]
@@ -26,7 +26,8 @@ public class GameManager : Singleton<GameManager>
     private Board _board;
     private ScreenFader _screenFader;
 
-    private bool _isGameOver = false, _isWinner = false;
+    public static bool isGameOver { get; private set; } = false;
+    private bool _isWinner = false;
 
     private const string LEVEL_STRING = "Level";
 
@@ -37,7 +38,7 @@ public class GameManager : Singleton<GameManager>
     }
 
     void SetupGame(Scene activeScene, LoadSceneMode loadMode = LoadSceneMode.Single)
-    {        
+    {
         Level = PlayerPrefs.GetInt(LEVEL_STRING);
         Debug.Log($"Starting Level {Level}");
 
@@ -58,11 +59,11 @@ public class GameManager : Singleton<GameManager>
     {
         movesLeft--;
         UpdateMoves();
-        
+
         // Check for game over
-        if(movesLeft == 0 && !_isGameOver)
+        if (movesLeft == 0 && !isGameOver)
         {
-            _isGameOver = true;
+            isGameOver = true;
             _isWinner = false;
 
             StartCoroutine(EndGameRoutine());
@@ -75,7 +76,7 @@ public class GameManager : Singleton<GameManager>
         {
             txtRemainingMoves.text = movesLeft.ToString();
         }
-    } 
+    }
 
     IEnumerator StartGameRoutine()
     {
@@ -100,13 +101,13 @@ public class GameManager : Singleton<GameManager>
     void ScoredPoints(int newScore)
     {
         // Check for game over
-        if(newScore >= scoreGoal && !_isGameOver)
+        if (newScore >= scoreGoal && !isGameOver)
         {
-            _isGameOver = true;
+            isGameOver = true;
             _isWinner = true;
 
             StartCoroutine(EndGameRoutine());
-        }        
+        }
     }
 
     void ActOnUserClick(Action gameFunction)
@@ -127,7 +128,8 @@ public class GameManager : Singleton<GameManager>
 
     IEnumerator EndGameRoutine()
     {
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(2f);
+        yield return new WaitUntil(() => !_board.isRefilling);
 
         _screenFader?.FadeOn();
         GameOver?.Invoke(_isWinner);
@@ -135,11 +137,11 @@ public class GameManager : Singleton<GameManager>
         if (_isWinner)
         {
             PlayerPrefs.SetInt(LEVEL_STRING, ++Level);
-            DisplayMessage(icnWin, $"You WIN!\n{scoreGoal}", "Next");          
+            DisplayMessage(icnWin, $"You WIN!\n{scoreGoal}", "Next");
         }
         else
-        {            
-            DisplayMessage(icnLose, $"You lost..\n{scoreGoal}", "Replay");            
+        {
+            DisplayMessage(icnLose, $"You lost..\n{scoreGoal}", "Replay");
         }
 
         yield return null;
