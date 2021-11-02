@@ -100,7 +100,7 @@ MonoBehaviour:
   xIndex: 0
   yIndex: 0
   scoreValue: 160
-  matchValue: 6
+  matchValue: 4
   type: 3
 --- !u!1 &1046475057548280
 GameObject:

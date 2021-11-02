@@ -68,15 +68,19 @@ public class TilePieceManager : SerializedMonoBehaviour
 
     public GameObject CreateBomb(Tile pos, Board board, BombType type, MatchValue match)
     {
-        Bomb bombInstance = Instantiate(GetBombByType(type, match), 
-            new Vector3(pos.xIndex, pos.yIndex, 0), 
-            Quaternion.identity)
-            .GetComponent<Bomb>();
+        var bomb = GetBombByType(type, match);
 
-        bombInstance?.Init(board);
-        bombInstance?.SetCoord(pos.xIndex, pos.yIndex);
-        bombInstance.transform.parent = board.transform;
-        return bombInstance.gameObject;
+        if (bomb != null)
+        {
+            Bomb bombInstance = Instantiate(bomb, new Vector3(pos.xIndex, pos.yIndex, 0), Quaternion.identity).GetComponent<Bomb>();
+
+            bombInstance?.Init(board);
+            bombInstance?.SetCoord(pos.xIndex, pos.yIndex);
+            bombInstance.transform.parent = board.transform;
+            return bombInstance.gameObject;
+        }
+        Debug.Log($"Trying to instantiate a null bomb of type {type} and value {match}");
+        return null;
     }
 
     private GameObject GetBombByType(BombType type, MatchValue match)
