@@ -29,6 +29,7 @@ public class Board : MonoBehaviour
 
     public static Action<int, int, int, bool> OnPieceCleared { get; internal set; }
     public static Action<int, int, int> OnTileBroke { get; internal set; }
+    public static Func<GamePiece[,], int, bool> OnRefillFinished { get; internal set; }
 
     public StartingObject[] startingPieces;
 
@@ -39,16 +40,12 @@ public class Board : MonoBehaviour
     
     private const string BOARD_LOCATION = "SO/BoardLvl_";  
 
-    private void Awake()
+    private void OnEnable()
     {
         LoadBoardForLevel();
-    }
 
-    void Start()
-    {
         _allTiles = new Tile[lvlBoard.width, lvlBoard.height];
         _allGamePieces = new GamePiece[lvlBoard.width, lvlBoard.height];
-
     }
 
     #region SETUP
@@ -834,24 +831,37 @@ public class Board : MonoBehaviour
         }
         while (matches.Count > 0);
 
+        // We are done refilling, so we check for a deadlock by firing the event deadlock uses.
+        // If true, we have a deadlock, so we handle it.
+        if(OnRefillFinished?.Invoke(_allGamePieces, 3) ?? false) yield return HandleDeadLock();
+
         isRefilling = false;
         _playerInputEnabled = !GameManager.isGameOver;
     }
 
+    IEnumerator HandleDeadLock()
+    {
+        // Give the player a second to process what's going on
+        yield return new WaitForSeconds(1f);
+
+        ClearBoard();
+
+        yield return new WaitForSeconds(1f);
+
+        yield return RefillRoutine();
+
+    }
+
     IEnumerator ClearAndCollapseRoutine(List<GamePiece> gamePieces, float delayBetweenMoves = 0.2f)
     {
-        List<GamePiece> movingPieces = new List<GamePiece>();
-        List<GamePiece> matches = new List<GamePiece>();
-
         //HighlightPieces(gamePieces);
-
         yield return new WaitForSeconds(delayBetweenMoves);
 
         int tries = 5;
 
-        while (tries > 0)
+        do
         {
-            // Checking for bombs as well!
+            // Check for bombs!
             var bombPieces = GetBombedPieces(gamePieces);
             gamePieces = gamePieces.Union(bombPieces).ToList();
 
@@ -859,7 +869,7 @@ public class Board : MonoBehaviour
             bombPieces = GetBombedPieces(gamePieces);
             gamePieces = gamePieces.Union(bombPieces).ToList();
 
-            // We track the collapsing columns before clearing, so that
+            // Track the collapsing columns before clearing, so that
             // we don't get a null reference
             List<int> collapsingColumns = GetColumns(gamePieces);
 
@@ -869,7 +879,7 @@ public class Board : MonoBehaviour
 
             yield return new WaitForSeconds(delayBetweenMoves);
 
-            movingPieces = CollapseColumn(collapsingColumns);
+            List<GamePiece> movingPieces = CollapseColumn(collapsingColumns);
 
             while (!IsCollapsed(movingPieces))
             {
@@ -878,7 +888,7 @@ public class Board : MonoBehaviour
 
             yield return new WaitForSeconds(delayBetweenMoves);
 
-            matches = FindMatchesAt(movingPieces);
+            List<GamePiece> matches = FindMatchesAt(movingPieces);
 
             // Checking for COLLECTIBLES at the bottom row
             matches = matches.Union(FindCollectiblesAt(0, true)).ToList();
@@ -895,7 +905,7 @@ public class Board : MonoBehaviour
                 IncreaseBonus?.Invoke();
                 yield return StartCoroutine(ClearAndCollapseRoutine(matches));
             }
-        }
+        }while (tries > 0) ;
     }
     #endregion CLEARING
 

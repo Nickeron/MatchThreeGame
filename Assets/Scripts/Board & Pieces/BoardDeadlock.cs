@@ -6,6 +6,16 @@ using UnityEngine;
 
 public class BoardDeadlock : MonoBehaviour
 {
+    private void OnEnable()
+    {
+        Board.OnRefillFinished += IsDeadLocked;
+    }
+
+    private void OnDisable()
+    {
+        Board.OnRefillFinished -= IsDeadLocked;
+    }
+
     public bool IsDeadLocked(GamePiece[,] allPieces, int listLength = 3)
     {
         for (int i = 0; i < allPieces.GetLength(0); i++)
@@ -15,39 +25,35 @@ public class BoardDeadlock : MonoBehaviour
                 if (HasMoveAt(allPieces, i, j, listLength)) return false;
             }
         }
-
+        Debug.LogWarning("--DEADLOCK--");
         return true;
     }
 
+    // Given an (x,y) coordinate return a List of GamePieces (either a row or column) 
     List<GamePiece> GetRowColumnList(GamePiece[,] allPieces, int x, int y, int listLength = 3, bool checkRow = true)
     {
-        int width = allPieces.GetLength(0);
-        int height = allPieces.GetLength(1);
-
         List<GamePiece> piecesList = new List<GamePiece>();
 
         for (int i = 0; i < listLength; i++)
         {
-            if (checkRow)
-            {
-                if (x + i < width && y < height) { piecesList.Add(allPieces[x + i, y]); }
-            }
-            else
-            {
-                if (x < width && y + i < height) { piecesList.Add(allPieces[x, y + i]); }
+            int nextX = checkRow ? x + i : x ;
+            int nextY = checkRow ? y : y + i;
+            
+            if (nextX < allPieces.GetLength(0) && nextY < allPieces.GetLength(1)) 
+            { 
+                piecesList.Add(allPieces[nextX, nextY]); 
             }
         }
         return piecesList;
     }
+
     List<GamePiece> GetMinMatches(List<GamePiece> gamePieces, int minMatch = 2)
     {
         List<GamePiece> matches = new List<GamePiece>();
 
-        var groups = gamePieces.GroupBy(n => n.matchValue);
-
-        foreach (var group in groups)
+        foreach (var group in gamePieces.GroupBy(n => n.matchValue))
         {
-            if (group.Count() > minMatch && group.Key != MatchValue.None)
+            if (group.Count() >= minMatch && group.Key != MatchValue.None)
             {
                 matches = group.ToList();
             }
@@ -83,19 +89,20 @@ public class BoardDeadlock : MonoBehaviour
 
         if (pieces == null || matches == null) return null;
 
-        if (pieces.Count != listLength || matches.Count != listLength - 1) return null;
+        if (pieces.Count != listLength || matches.Count < listLength - 1) return null;
 
-        unmatchedPiece = pieces.Except(matches).FirstOrDefault();
+        // if we have an unmatched GamePiece, check its neighboring GamePieces
+        unmatchedPiece = pieces.Except(matches).FirstOrDefault();      
 
         if (unmatchedPiece == null) return null;
+
+        Debug.Log($"Move {matches[0].matchValue} piece to {unmatchedPiece.xIndex}, {unmatchedPiece.yIndex}");
 
         return matches
             .Union(GetNeighbors(allPieces, unmatchedPiece.xIndex, unmatchedPiece.yIndex)
             .Except(matches)
             .Where(n => n.matchValue == matches[0].matchValue))
-            .ToList();
-
-        //Debug.Log($"Move {matches[0].matchValue} piece to {unmatchedPiece.xIndex}, {unmatchedPiece.yIndex}");
+            .ToList();        
     }
 
     Vector2[] GetSearchDirections()
@@ -111,13 +118,13 @@ public class BoardDeadlock : MonoBehaviour
 
     bool HasMoveAt(GamePiece[,] allPieces, int x, int y, int listLength = 3)
     {
-        var matches = GetAvailableMoves(allPieces, x, y, listLength, true)
-            .Union(GetAvailableMoves(allPieces, x, y, listLength, false))
-            .ToList();
+        var horizontMoves = GetAvailableMoves(allPieces, x, y, listLength, true);
+        var verticalMoves = GetAvailableMoves(allPieces, x, y, listLength, false);
 
-        if (matches == null) return false;
-
-        return matches.Count >= listLength;
+        Debug.Log($"Horizontal moves {horizontMoves?.Count ?? 0}, Vertical Moves {verticalMoves?.Count ?? 0}");
+        
+        return horizontMoves != null ? horizontMoves.Count >= listLength :
+            verticalMoves != null ? verticalMoves.Count >= listLength : false;
     }
 
     bool isWithinBounds(int x, int y, int width, int height)
