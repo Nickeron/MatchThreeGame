@@ -21,7 +21,7 @@ public class GameManager : Singleton<GameManager>
     public Sprite icnLose, icnWin, icnGoal;
 
     [HideInInspector]
-    public int Level;
+    public static int Level;
 
     private Board _board;
     private ScreenFader _screenFader;
@@ -53,6 +53,21 @@ public class GameManager : Singleton<GameManager>
 
         ActOnUserClick(StartTheGame);
         DisplayMessage(icnGoal, $"Score Goal\n{scoreGoal}", "Start");
+    }
+
+    public static void GoBackOneLevel()
+    {
+        if(Level > 1)
+        {
+            Debug.LogWarning("Stepping down 1 level.");
+            PlayerPrefs.SetInt(LEVEL_STRING, --Level);
+        }
+        else
+        {
+            Level = 1;
+            PlayerPrefs.SetInt(LEVEL_STRING, Level);
+        }
+        
     }
 
     public void UserPlayed()

@@ -37,8 +37,7 @@ public class Board : MonoBehaviour
 
     internal static LevelBoardSO lvlBoard;
     
-    private const string BOARD_LOCATION = "SO/BoardLvl_";
-    private readonly int currentLevel = 1;   
+    private const string BOARD_LOCATION = "SO/BoardLvl_";  
 
     private void Awake()
     {
@@ -63,8 +62,16 @@ public class Board : MonoBehaviour
 
     void LoadBoardForLevel()
     {
-        lvlBoard = Resources.Load($"{BOARD_LOCATION}{currentLevel}") as LevelBoardSO;
+        lvlBoard = Resources.Load($"{BOARD_LOCATION}{GameManager.Level}") as LevelBoardSO;
+
+        if (lvlBoard == null)
+        {
+            Debug.LogWarning($"Level Board for lvl {GameManager.Level}, does not exist in Resources.");
+            GameManager.GoBackOneLevel();
+            LoadBoardForLevel();
+        }
     }
+
     void SetupCamera()
     {
         float horizCenter = (lvlBoard.height - 1) / 2f;
