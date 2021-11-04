@@ -173,55 +173,58 @@ public class Board : MonoBehaviour
 
     void FillBoard(int falseOffset = 0, float fallTime = 0.1f)
     {
-        for (int i = 0; i < lvlBoard.width; i++)
+        ParseBoard((x, y) =>
         {
-            for (int j = 0; j < lvlBoard.height; j++)
+            // Fill the position with a collectible depending on the conditions
+            if (y == lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
             {
-                if (!IsSpaceAvailable(i, j)) continue;
-
-                // Fill the position with a collectible depending on the conditions
-                if (j == lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
-                {
-                    FillRandomAt(i, j, falseOffset, fallTime, isCollectible: true);
-                    continue;
-                }
-
-
+                FillRandomAt(x, y, falseOffset, fallTime, isCollectible: true);
+            }
+            else
+            {
                 // Otherwise fill the position with a regular gamepiece
-                FillRandomAt(i, j, falseOffset, fallTime);
+                FillRandomAt(x, y, falseOffset, fallTime);
                 int iterations = 0;
 
-                while (HasMatchOnFill(i, j) || iterations < 100)
+                while (HasMatchOnFill(x, y) || iterations < 100)
                 {
-                    ClearPieceAt(i, j, wasChosen: false);
-                    FillRandomAt(i, j, falseOffset, fallTime);
+                    ClearPieceAt(x, y, wasChosen: false);
+                    FillRandomAt(x, y, falseOffset, fallTime);
 
                     iterations++;
                 }
             }
-        }
+        });
     }
-
+    
     void FillBoardFromList(List<GamePiece> gamePieces)
     {
         Queue<GamePiece> unusedPieces = new Queue<GamePiece>(gamePieces);
 
+        ParseBoard((x, y) =>
+        {
+            _allGamePieces[x, y] = unusedPieces.Dequeue();
+
+            int iterations = 0;
+
+            while (HasMatchOnFill(x, y) || iterations < 100)
+            {
+                unusedPieces.Enqueue(_allGamePieces[x, y]);
+                _allGamePieces[x, y] = unusedPieces.Dequeue();
+                iterations++;
+            }
+        });
+    }
+
+    void ParseBoard(Action<int, int> boardMethod)
+    {
         for (int x = 0; x < lvlBoard.width; x++)
         {
             for (int y = 0; y < lvlBoard.height; y++)
             {
                 if (!IsSpaceAvailable(x, y)) continue;
 
-                _allGamePieces[x, y] = unusedPieces.Dequeue();
-
-                int iterations = 0;
-
-                while (HasMatchOnFill(x, y) || iterations < 100)
-                {
-                    unusedPieces.Enqueue(_allGamePieces[x, y]);
-                    _allGamePieces[x, y] = unusedPieces.Dequeue();
-                    iterations++;
-                }
+                boardMethod(x, y);
             }
         }
     }

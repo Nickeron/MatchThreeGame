@@ -1,4 +1,4 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class BoardDeadlock : MonoBehaviour
 {
+    public static event Action OnDeadlock;
+
     private void OnEnable()
     {
         Board.OnRefillFinished += IsDeadLocked;
@@ -25,6 +27,8 @@ public class BoardDeadlock : MonoBehaviour
                 if (HasMoveAt(allPieces, i, j, listLength)) return false;
             }
         }
+
+        OnDeadlock();
         Debug.LogWarning("--DEADLOCK--");
         return true;
     }
