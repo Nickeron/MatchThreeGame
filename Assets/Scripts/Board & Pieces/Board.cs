@@ -26,7 +26,7 @@ public class Board : MonoBehaviour
     BoardDeadlock _deadlock;
 
     bool _playerInputEnabled = true;
-    public bool isRefilling { get; private set;} = false;
+    public bool isRefilling { get; private set; } = false;
 
     public static Action<int, int, int, bool> OnPieceCleared { get; internal set; }
     public static Action<int, int, int> OnTileBroke { get; internal set; }
@@ -38,8 +38,8 @@ public class Board : MonoBehaviour
     GameObject _targetTileBomb;
 
     internal static LevelBoardSO lvlBoard;
-    
-    private const string BOARD_LOCATION = "SO/BoardLvl_";  
+
+    private const string BOARD_LOCATION = "SO/BoardLvl_";
 
     private void OnEnable()
     {
@@ -173,37 +173,54 @@ public class Board : MonoBehaviour
 
     void FillBoard(int falseOffset = 0, float fallTime = 0.1f)
     {
-        int maxIterations = 100;
-
         for (int i = 0; i < lvlBoard.width; i++)
         {
             for (int j = 0; j < lvlBoard.height; j++)
             {
-                if (IsSpaceAvailable(i, j))
+                if (!IsSpaceAvailable(i, j)) continue;
+
+                // Fill the position with a collectible depending on the conditions
+                if (j == lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
                 {
-                    // Fill the position with a collectible depending on the conditions
-                    if (j == lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
-                        FillRandomAt(i, j, falseOffset, fallTime, isCollectible: true);
+                    FillRandomAt(i, j, falseOffset, fallTime, isCollectible: true);
+                    continue;
+                }
 
-                    // Otherwise fill the position with a regular gamepiece
-                    else
-                    {
-                        FillRandomAt(i, j, falseOffset, fallTime);
-                        int iterations = 0;
 
-                        while (HasMatchOnFill(i, j))
-                        {
-                            ClearPieceAt(i, j, wasChosen: false);
-                            FillRandomAt(i, j, falseOffset, fallTime);
+                // Otherwise fill the position with a regular gamepiece
+                FillRandomAt(i, j, falseOffset, fallTime);
+                int iterations = 0;
 
-                            iterations++;
-                            if (iterations >= maxIterations)
-                            {
-                                Debug.LogError("While broke, searching for a random piece");
-                                break;
-                            }
-                        }
-                    }
+                while (HasMatchOnFill(i, j) || iterations < 100)
+                {
+                    ClearPieceAt(i, j, wasChosen: false);
+                    FillRandomAt(i, j, falseOffset, fallTime);
+
+                    iterations++;
+                }
+            }
+        }
+    }
+
+    void FillBoardFromList(List<GamePiece> gamePieces)
+    {
+        Queue<GamePiece> unusedPieces = new Queue<GamePiece>(gamePieces);
+
+        for (int x = 0; x < lvlBoard.width; x++)
+        {
+            for (int y = 0; y < lvlBoard.height; y++)
+            {
+                if (!IsSpaceAvailable(x, y)) continue;
+
+                _allGamePieces[x, y] = unusedPieces.Dequeue();
+
+                int iterations = 0;
+
+                while (HasMatchOnFill(x, y) || iterations < 100)
+                {
+                    unusedPieces.Enqueue(_allGamePieces[x, y]);
+                    _allGamePieces[x, y] = unusedPieces.Dequeue();
+                    iterations++;
                 }
             }
         }
@@ -461,7 +478,7 @@ public class Board : MonoBehaviour
                     targetPiece.Move(targetTile.xIndex, targetTile.yIndex, swapTime);
                 }
                 else
-                {                    
+                {
                     yield return new WaitForSeconds(swapTime);
 
                     Vector2 swipeDirection = new Vector2(targetTile.xIndex - clickedTile.xIndex, targetTile.yIndex - clickedTile.yIndex);
@@ -740,7 +757,7 @@ public class Board : MonoBehaviour
         {
             for (int j = 0; j < lvlBoard.height; j++)
             {
-                ClearPieceAt(i, j);
+                ClearPieceAt(i, j, false);
             }
         }
     }
@@ -834,7 +851,7 @@ public class Board : MonoBehaviour
 
         // We are done refilling, so we check for a deadlock by firing the event deadlock uses.
         // If true, we have a deadlock, so we handle it.
-        if(OnRefillFinished?.Invoke(_allGamePieces, 3) ?? false) yield return HandleDeadLock();
+        if (OnRefillFinished?.Invoke(_allGamePieces, 3) ?? false) yield return HandleDeadLock();
 
         isRefilling = false;
         _playerInputEnabled = !GameManager.isGameOver;
@@ -906,7 +923,7 @@ public class Board : MonoBehaviour
                 IncreaseBonus?.Invoke();
                 yield return StartCoroutine(ClearAndCollapseRoutine(matches));
             }
-        }while (tries > 0) ;
+        } while (tries > 0);
     }
     #endregion CLEARING
 
