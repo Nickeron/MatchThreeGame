@@ -9,14 +9,16 @@ public class MessageWindow : MonoBehaviour
     public Image icnMessage;
     public Text txtMessage, txtButton;
 
+    internal static Action ButtonPressed;
 
-    internal Action ButtonPressed;
-
-    private RectXformMover mover;
-
-    private void Awake()
+    private void OnEnable()
     {
-        mover = GetComponent<RectXformMover>();
+        GameManager.OnDisplayMessage += ShowMessage;
+    }
+    
+    private void OnDisable()
+    {
+        GameManager.OnDisplayMessage -= ShowMessage;
     }
 
     public void ShowMessage(Sprite sprite = null, string message = "", string btnMessage = "Start")
@@ -36,7 +38,7 @@ public class MessageWindow : MonoBehaviour
             txtButton.text = btnMessage;
         }
 
-        mover.MoveOn();
+        GetComponent<RectXformMover>().MoveOn();
     }
 
     public void OnUserClick()

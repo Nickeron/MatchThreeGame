@@ -869,7 +869,7 @@ public class Board : MonoBehaviour
         
         yield return new WaitForSeconds(1f);
 
-        Debug.Log("Pieces Moved to their positions");
+        //Debug.Log("Pieces Moved to their positions");
         yield return ClearAndRefillBoardRoutine(FindAllMatches());
     }
 

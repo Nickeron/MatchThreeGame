@@ -8,16 +8,15 @@ using System;
 public class GameManager : Singleton<GameManager>
 {
     public static event Action<bool> GameOver;
+    public static event Action<Sprite, string, string> OnDisplayMessage;
+
     public int movesLeft = 30;
     public int scoreGoal = 1000;
 
 
     public TextMeshProUGUI txtLevelName, txtRemainingMoves;
 
-    [BoxGroup("Message Window")]
-    public MessageWindow messageWindow;
-
-    [HorizontalGroup("Message Window/Icons", LabelWidth = 50)]
+    [HorizontalGroup("Message Window Icons", LabelWidth = 50)]
     public Sprite icnLose, icnWin, icnGoal;
 
     [HideInInspector]
@@ -52,12 +51,12 @@ public class GameManager : Singleton<GameManager>
         UpdateMoves();
 
         ActOnUserClick(StartTheGame);
-        DisplayMessage(icnGoal, $"Score Goal\n{scoreGoal}", "Start");
+        OnDisplayMessage?.Invoke(icnGoal, $"Score Goal\n{scoreGoal}", "Start");
     }
 
     public static void GoBackOneLevel()
     {
-        if(Level > 1)
+        if (Level > 1)
         {
             Debug.LogWarning("Stepping down 1 level.");
             PlayerPrefs.SetInt(LEVEL_STRING, --Level);
@@ -67,7 +66,7 @@ public class GameManager : Singleton<GameManager>
             Level = 1;
             PlayerPrefs.SetInt(LEVEL_STRING, Level);
         }
-        
+
     }
 
     public void UserPlayed()
@@ -104,15 +103,6 @@ public class GameManager : Singleton<GameManager>
         ScoreManager.ScoredPoints += ScoredPoints;
     }
 
-    void DisplayMessage(Sprite icon, string mainMessage, string btnMessage)
-    {
-        if (messageWindow != null)
-        {
-            messageWindow.GetComponent<RectXformMover>().MoveOn();
-            messageWindow.ShowMessage(icon, mainMessage, btnMessage);
-        }
-    }
-
     void ScoredPoints(int newScore)
     {
         // Check for game over
@@ -127,18 +117,12 @@ public class GameManager : Singleton<GameManager>
 
     void ActOnUserClick(Action gameFunction)
     {
-        if (messageWindow != null)
-        {
-            messageWindow.ButtonPressed += gameFunction;
-        }
+        MessageWindow.ButtonPressed += gameFunction;
     }
 
     void UnsubscribeFromActionList(Action gameFunction)
     {
-        if (messageWindow != null)
-        {
-            messageWindow.ButtonPressed -= gameFunction;
-        }
+        MessageWindow.ButtonPressed -= gameFunction;
     }
 
     IEnumerator EndGameRoutine()
@@ -152,11 +136,11 @@ public class GameManager : Singleton<GameManager>
         if (_isWinner)
         {
             PlayerPrefs.SetInt(LEVEL_STRING, ++Level);
-            DisplayMessage(icnWin, $"You WIN!\n{scoreGoal}", "Next");
+            OnDisplayMessage?.Invoke(icnWin, $"You WIN!\n{scoreGoal}", "Next");
         }
         else
         {
-            DisplayMessage(icnLose, $"You lost..\n{scoreGoal}", "Replay");
+            OnDisplayMessage?.Invoke(icnLose, $"You lost..\n{scoreGoal}", "Replay");
         }
 
         yield return null;
