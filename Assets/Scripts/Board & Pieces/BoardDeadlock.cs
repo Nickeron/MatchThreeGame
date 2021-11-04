@@ -6,31 +6,31 @@ using UnityEngine;
 
 public class BoardDeadlock : MonoBehaviour
 {
-    public static event Action OnDeadlock;
+    public static event Action<GamePiece[,]> OnDeadlock;
 
     private void OnEnable()
     {
-        Board.OnRefillFinished += IsDeadLocked;
+        Board.OnFillFinished += AreThereMoves;
     }
 
     private void OnDisable()
     {
-        Board.OnRefillFinished -= IsDeadLocked;
+        Board.OnFillFinished -= AreThereMoves;
     }
 
-    public bool IsDeadLocked(GamePiece[,] allPieces, int listLength = 3)
+    public bool AreThereMoves(GamePiece[,] allPieces, int listLength = 3)
     {
         for (int i = 0; i < allPieces.GetLength(0); i++)
         {
             for (int j = 0; j < allPieces.GetLength(1); j++)
             {
-                if (HasMoveAt(allPieces, i, j, listLength)) return false;
+                if (HasMoveAt(allPieces, i, j, listLength)) return true;
             }
         }
 
-        OnDeadlock();
         Debug.LogWarning("--DEADLOCK--");
-        return true;
+        OnDeadlock?.Invoke(allPieces);        
+        return false;
     }
 
     // Given an (x,y) coordinate return a List of GamePieces (either a row or column) 
@@ -102,7 +102,7 @@ public class BoardDeadlock : MonoBehaviour
 
         if (unmatchedPiece == null) return null;
 
-        Debug.Log($"Move {matches[0].matchValue} piece to {unmatchedPiece.xIndex}, {unmatchedPiece.yIndex}");
+        //Debug.Log($"Move {matches[0].matchValue} piece to {unmatchedPiece.xIndex}, {unmatchedPiece.yIndex}");
 
         return matches
             .Union(GetNeighbors(allPieces, unmatchedPiece.xIndex, unmatchedPiece.yIndex)
@@ -127,7 +127,7 @@ public class BoardDeadlock : MonoBehaviour
         var horizontMoves = GetAvailableMoves(allPieces, x, y, listLength, true);
         var verticalMoves = GetAvailableMoves(allPieces, x, y, listLength, false);
 
-        Debug.Log($"Horizontal moves {horizontMoves?.Count ?? 0}, Vertical Moves {verticalMoves?.Count ?? 0}");
+        //Debug.Log($"Horizontal moves {horizontMoves?.Count ?? 0}, Vertical Moves {verticalMoves?.Count ?? 0}");
 
         return horizontMoves != null ? horizontMoves.Count >= listLength :
             verticalMoves != null && verticalMoves.Count >= listLength;

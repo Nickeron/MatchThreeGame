@@ -4,11 +4,28 @@ using UnityEngine;
 
 public class BoardShuffle : MonoBehaviour
 {
+    public static event System.Action<List<GamePiece>> OnBoardShuffled;
+
+    private void OnEnable()
+    {
+        BoardDeadlock.OnDeadlock += ShuffleBoard;
+    }
+
+    private void OnDisable()
+    {
+        BoardDeadlock.OnDeadlock -= ShuffleBoard;
+    }
+
+    void ShuffleBoard(GamePiece[,] allPieces)
+    {
+        OnBoardShuffled?.Invoke(ShuffleList(RemoveNormalPieces(allPieces)));
+    }
+
     List<GamePiece> RemoveNormalPieces(GamePiece[,] allPieces)
     {
         List<GamePiece> normalPieces = new List<GamePiece>();
 
-        ParseBoardPieces(allPieces, (x, y) =>
+        ForEachPiece(allPieces, (x, y) =>
         {
             var gamePiece = allPieces[x, y];
 
@@ -22,12 +39,7 @@ public class BoardShuffle : MonoBehaviour
         return normalPieces;
     }
 
-    void MovePieces(GamePiece[,] allPieces, float swapTime = 0.5f)
-    {
-        ParseBoardPieces(allPieces, (x, y) => allPieces[x, y].Move(x, y, swapTime));
-    }
-
-    void ShuffleList(List<GamePiece> shufflePieces)
+    List<GamePiece> ShuffleList(List<GamePiece> shufflePieces)
     {
         for (int pos = 0; pos < shufflePieces.Count - 1; pos++)
         {
@@ -37,10 +49,11 @@ public class BoardShuffle : MonoBehaviour
 
             SwapPositions(shufflePieces, randPos, pos);
         }
+        return shufflePieces;
     }
 
     #region HELPER METHODS
-    void ParseBoardPieces(GamePiece[,] allPieces, System.Action<int, int> MethodOnPiece)
+    void ForEachPiece(GamePiece[,] allPieces, System.Action<int, int> MethodOnPiece)
     {
         for (int x = 0; x < allPieces.GetLength(0); x++)
         {

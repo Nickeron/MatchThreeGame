@@ -14,18 +14,18 @@ public class GamePiece : Mover
     private Board _board;
     private bool _isMoving = false, _initialized = false;
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            Move((int)transform.position.x + 1, (int)transform.position.y, 0.5f);
-        }
+    //void Update()
+    //{
+    //    if (Input.GetKeyDown(KeyCode.RightArrow))
+    //    {
+    //        Move((int)transform.position.x + 1, (int)transform.position.y, 0.5f);
+    //    }
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            Move((int)transform.position.x - 1, (int)transform.position.y, 0.5f);
-        }
-    }
+    //    if (Input.GetKeyDown(KeyCode.LeftArrow))
+    //    {
+    //        Move((int)transform.position.x - 1, (int)transform.position.y, 0.5f);
+    //    }
+    //}
 
     public void Init(Board board)
     {
@@ -38,23 +38,28 @@ public class GamePiece : Mover
         yIndex = y;
     }
 
-    public void Move(int destX, int destY, float timeToMove)
+    // A string to use for debugging purposes
+    string previousCaller;
+
+    public void Move(int destX, int destY, float timeToMove, string methodCaller)
     {
         if (_isMoving)
         {
-            Debug.LogWarning("Cannot start move now. Already moving");
+            Debug.LogWarning($"Irregular call to move from: {methodCaller}. Already moving from: {previousCaller}");
             return;
         }
 
+        _isMoving = true;
+        previousCaller = methodCaller;
         StartCoroutine(MoveRoutine(new Vector3(destX, destY, 0), timeToMove));
     }
 
     IEnumerator MoveRoutine(Vector3 destination, float timeToMove)
     {
         Vector3 startPosition = transform.position;
-        float elapsedTime = 0f;
+        float elapsedTime = 0f;        
 
-        _isMoving = true;
+        //Debug.Log($"Moving {matchValue} from {transform.position.x},{transform.position.y} to {destination.x},{destination.y}");
 
         while (Vector3.Distance(transform.position, destination) > 0.05f)
         {

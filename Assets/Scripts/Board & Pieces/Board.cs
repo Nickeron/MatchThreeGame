@@ -23,14 +23,12 @@ public class Board : MonoBehaviour
     public Tile _clickedTile;
     public Tile _targetTile;
 
-    BoardDeadlock _deadlock;
-
     bool _playerInputEnabled = true;
     public bool isRefilling { get; private set; } = false;
 
     public static Action<int, int, int, bool> OnPieceCleared { get; internal set; }
     public static Action<int, int, int> OnTileBroke { get; internal set; }
-    public static Func<GamePiece[,], int, bool> OnRefillFinished { get; internal set; }
+    public static Func<GamePiece[,], int, bool> OnFillFinished { get; internal set; }
 
     public StartingObject[] startingPieces;
 
@@ -47,6 +45,8 @@ public class Board : MonoBehaviour
 
         _allTiles = new Tile[lvlBoard.width, lvlBoard.height];
         _allGamePieces = new GamePiece[lvlBoard.width, lvlBoard.height];
+
+        BoardShuffle.OnBoardShuffled += FillBoardFromList;
     }
 
     #region SETUP
@@ -137,7 +137,7 @@ public class Board : MonoBehaviour
             if (falseYOffset != 0)
             {
                 prefab.transform.position = new Vector3(x, y + falseYOffset, 0);
-                randomPiece.Move(x, y, fallTime);
+                randomPiece.Move(x, y, fallTime, nameof(CreateGamePiece));
             }
 
             return randomPiece;
@@ -173,7 +173,7 @@ public class Board : MonoBehaviour
 
     void FillBoard(int falseOffset = 0, float fallTime = 0.1f)
     {
-        ParseBoard((x, y) =>
+        ForEachPiece((x, y) =>
         {
             // Fill the position with a collectible depending on the conditions
             if (y == lvlBoard.height - 1 && TilePieceManager.Instance.CanAddCollectible())
@@ -196,12 +196,12 @@ public class Board : MonoBehaviour
             }
         });
     }
-    
+
     void FillBoardFromList(List<GamePiece> gamePieces)
     {
         Queue<GamePiece> unusedPieces = new Queue<GamePiece>(gamePieces);
 
-        ParseBoard((x, y) =>
+        ForEachPiece((x, y) =>
         {
             _allGamePieces[x, y] = unusedPieces.Dequeue();
 
@@ -214,15 +214,17 @@ public class Board : MonoBehaviour
                 iterations++;
             }
         });
+
+        StartCoroutine(MovePieces());
     }
 
-    void ParseBoard(Action<int, int> boardMethod)
+    void ForEachPiece(Action<int, int> boardMethod, bool spaceNotNull = false)
     {
         for (int x = 0; x < lvlBoard.width; x++)
         {
             for (int y = 0; y < lvlBoard.height; y++)
             {
-                if (!IsSpaceAvailable(x, y)) continue;
+                if (!IsSpaceAvailable(x, y, spaceNotNull)) continue;
 
                 boardMethod(x, y);
             }
@@ -457,44 +459,42 @@ public class Board : MonoBehaviour
 
     private IEnumerator SwitchTilesRoutine(Tile clickedTile, Tile targetTile)
     {
-        if (_playerInputEnabled)
+        if (!_playerInputEnabled) yield return null;
+
+        GamePiece clickedPiece = _allGamePieces[clickedTile.xIndex, clickedTile.yIndex];
+        GamePiece targetPiece = _allGamePieces[targetTile.xIndex, targetTile.yIndex];
+
+        if (targetPiece == null || clickedPiece == null) yield return null;
+
+        //Debug.Log($"Moving {clickedTile.name} to {targetTile.name}");
+
+        clickedPiece.Move(targetTile.xIndex, targetTile.yIndex, swapTime, nameof(SwitchTilesRoutine));
+        targetPiece.Move(clickedTile.xIndex, clickedTile.yIndex, swapTime, nameof(SwitchTilesRoutine));
+
+        yield return new WaitForSeconds(swapTime);
+
+        List<GamePiece> clickedPieceMatches = FindMatchesAt(clickedTile.xIndex, clickedTile.yIndex);
+        List<GamePiece> targetPieceMatches = FindMatchesAt(targetTile.xIndex, targetTile.yIndex);
+        List<GamePiece> coloredBombMatches = CheckForColorBombs(clickedPiece, targetPiece);
+
+        if (targetPieceMatches.Count == 0 && clickedPieceMatches.Count == 0 && coloredBombMatches.Count == 0)
         {
-            GamePiece clickedPiece = _allGamePieces[clickedTile.xIndex, clickedTile.yIndex];
-            GamePiece targetPiece = _allGamePieces[targetTile.xIndex, targetTile.yIndex];
+            clickedPiece.Move(clickedTile.xIndex, clickedTile.yIndex, swapTime, nameof(SwitchTilesRoutine));
+            targetPiece.Move(targetTile.xIndex, targetTile.yIndex, swapTime, nameof(SwitchTilesRoutine));
 
-            if (targetPiece != null && clickedPiece != null)
-            {
-                //Debug.Log($"Moving {clickedTile.name} to {targetTile.name}");
-
-                clickedPiece.Move(targetTile.xIndex, targetTile.yIndex, swapTime);
-                targetPiece.Move(clickedTile.xIndex, clickedTile.yIndex, swapTime);
-
-                yield return new WaitForSeconds(swapTime);
-
-                List<GamePiece> clickedPieceMatches = FindMatchesAt(clickedTile.xIndex, clickedTile.yIndex);
-                List<GamePiece> targetPieceMatches = FindMatchesAt(targetTile.xIndex, targetTile.yIndex);
-                List<GamePiece> coloredBombMatches = CheckForColorBombs(clickedPiece, targetPiece);
-
-                if (targetPieceMatches.Count == 0 && clickedPieceMatches.Count == 0 && coloredBombMatches.Count == 0)
-                {
-                    clickedPiece.Move(clickedTile.xIndex, clickedTile.yIndex, swapTime);
-                    targetPiece.Move(targetTile.xIndex, targetTile.yIndex, swapTime);
-                }
-                else
-                {
-                    yield return new WaitForSeconds(swapTime);
-
-                    Vector2 swipeDirection = new Vector2(targetTile.xIndex - clickedTile.xIndex, targetTile.yIndex - clickedTile.yIndex);
-
-                    // Check if there is a bomb after the switch, for both tiles' matches
-                    _clickedTileBomb = InsertBomb(clickedTile, swipeDirection, clickedPieceMatches, targetPiece);
-                    _targetTileBomb = InsertBomb(targetTile, swipeDirection, targetPieceMatches, clickedPiece);
-
-                    ClearAndRefillBoard(clickedPieceMatches.Union(targetPieceMatches).Union(coloredBombMatches).ToList());
-                    GameManager.Instance?.UserPlayed();
-                }
-            }
+            yield return null;
         }
+
+        yield return new WaitForSeconds(swapTime);
+
+        Vector2 swipeDirection = new Vector2(targetTile.xIndex - clickedTile.xIndex, targetTile.yIndex - clickedTile.yIndex);
+
+        // Check if there is a bomb after the switch, for both tiles' matches
+        _clickedTileBomb = InsertBomb(clickedTile, swipeDirection, clickedPieceMatches, targetPiece);
+        _targetTileBomb = InsertBomb(targetTile, swipeDirection, targetPieceMatches, clickedPiece);
+
+        ClearAndRefillBoard(clickedPieceMatches.Union(targetPieceMatches).Union(coloredBombMatches).ToList());
+        GameManager.Instance?.UserPlayed();
     }
     #endregion INTERACTION
 
@@ -798,7 +798,7 @@ public class Board : MonoBehaviour
                 {
                     if (_allGamePieces[column, j] != null)
                     {
-                        _allGamePieces[column, j].Move(column, i, collapseTime * (j - i));
+                        _allGamePieces[column, j].Move(column, i, collapseTime * (j - i), nameof(CollapseColumn));
                         _allGamePieces[column, i] = _allGamePieces[column, j];
                         _allGamePieces[column, i].SetCoord(column, i);
 
@@ -848,16 +848,29 @@ public class Board : MonoBehaviour
 
             yield return StartCoroutine(RefillRoutine());
 
+            yield return new WaitForSeconds(1);
+
             matches = FindAllMatches();
         }
         while (matches.Count > 0);
 
         // We are done refilling, so we check for a deadlock by firing the event deadlock uses.
         // If true, we have a deadlock, so we handle it.
-        if (OnRefillFinished?.Invoke(_allGamePieces, 3) ?? false) yield return HandleDeadLock();
+        if (OnFillFinished?.Invoke(_allGamePieces, 3) ?? true)
+        {
+            isRefilling = false;
+            _playerInputEnabled = !GameManager.isGameOver;
+        }
+    }
 
-        isRefilling = false;
-        _playerInputEnabled = !GameManager.isGameOver;
+    IEnumerator MovePieces()
+    {        
+        ForEachPiece((x, y) =>  _allGamePieces[x, y].Move(x, y, swapTime, nameof(MovePieces)), spaceNotNull : true);
+        
+        yield return new WaitForSeconds(1f);
+
+        Debug.Log("Pieces Moved to their positions");
+        yield return ClearAndRefillBoardRoutine(FindAllMatches());
     }
 
     IEnumerator HandleDeadLock()
