@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(BoardDeadlock))]
+[RequireComponent(typeof(BoardShuffle))]
 public class Board : MonoBehaviour
 {
     public static event Action IncreaseBonus;
@@ -842,7 +843,7 @@ public class Board : MonoBehaviour
     IEnumerator HandleDeadLock()
     {
         // Give the player a second to process what's going on
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
 
         ClearBoard();
 

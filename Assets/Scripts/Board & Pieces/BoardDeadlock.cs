@@ -39,7 +39,9 @@ public class BoardDeadlock : MonoBehaviour
             int nextX = checkRow ? x + i : x ;
             int nextY = checkRow ? y : y + i;
             
-            if (nextX < allPieces.GetLength(0) && nextY < allPieces.GetLength(1)) 
+            if (nextX < allPieces.GetLength(0) && 
+                nextY < allPieces.GetLength(1) && 
+                allPieces[nextX, nextY] != null) 
             { 
                 piecesList.Add(allPieces[nextX, nextY]); 
             }
@@ -122,9 +124,9 @@ public class BoardDeadlock : MonoBehaviour
         var verticalMoves = GetAvailableMoves(allPieces, x, y, listLength, false);
 
         Debug.Log($"Horizontal moves {horizontMoves?.Count ?? 0}, Vertical Moves {verticalMoves?.Count ?? 0}");
-        
+
         return horizontMoves != null ? horizontMoves.Count >= listLength :
-            verticalMoves != null ? verticalMoves.Count >= listLength : false;
+            verticalMoves != null && verticalMoves.Count >= listLength;
     }
 
     bool isWithinBounds(int x, int y, int width, int height)
