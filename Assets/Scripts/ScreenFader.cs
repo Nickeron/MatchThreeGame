@@ -15,6 +15,18 @@ public class ScreenFader : MonoBehaviour
         _graphic = GetComponent<MaskableGraphic>();
     }
 
+    private void OnEnable()
+    {
+        GameManager.GameStart += FadeOff;
+        GameManager.GameOver += FadeOn;
+    }
+
+    private void OnDisable()
+    {
+        GameManager.GameStart -= FadeOff;
+        GameManager.GameOver -= FadeOn;
+    }
+
     private IEnumerator FadeRoutine(float alpha)
     {
         yield return new WaitForSeconds(delay);
@@ -22,7 +34,7 @@ public class ScreenFader : MonoBehaviour
         _graphic.CrossFadeAlpha(alpha, timeToFade, ignoreTimeScale: true);
     }
 
-    public void FadeOn()
+    public void FadeOn(bool _)
     {
         StartCoroutine(FadeRoutine(solidAlpha));
     } 

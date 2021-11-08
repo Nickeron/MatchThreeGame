@@ -24,11 +24,12 @@ public class Board : MonoBehaviour
     public Tile _targetTile;
 
     bool _playerInputEnabled = true;
-    public bool isRefilling { get; private set; } = false;
 
-    public static Action<int, int, int, bool> OnPieceCleared { get; internal set; }
-    public static Action<int, int, int> OnTileBroke { get; internal set; }
-    public static Func<GamePiece[,], int, bool> OnFillFinished { get; internal set; }
+    public static Action<int, int, int, bool> OnPieceCleared;
+    public static Action<int, int, int> OnTileBroke;
+    public static Action OnUserPlayed;
+    public static Func<GamePiece[,], int, bool> OnFillFinished;
+    public static Action<bool> OnRefill;
 
     public StartingObject[] startingPieces;
 
@@ -46,12 +47,26 @@ public class Board : MonoBehaviour
         _allTiles = new Tile[lvlBoard.width, lvlBoard.height];
         _allGamePieces = new GamePiece[lvlBoard.width, lvlBoard.height];
 
+        GameManager.GameStart += SetupBoard;
         BoardShuffle.OnBoardShuffled += FillBoardFromList;
+    }
+
+    private void OnDisable()
+    {
+        GameManager.GameStart -= SetupBoard;
+        BoardShuffle.OnBoardShuffled -= FillBoardFromList;
     }
 
     #region SETUP
     internal void SetupBoard()
     {
+        StartCoroutine(SetupBpardRoutine());
+    }
+
+    IEnumerator SetupBpardRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+
         SetupTiles();
         SetupGamePieces();
         SetupCamera();
@@ -494,7 +509,8 @@ public class Board : MonoBehaviour
         _targetTileBomb = InsertBomb(targetTile, swipeDirection, targetPieceMatches, clickedPiece);
 
         ClearAndRefillBoard(clickedPieceMatches.Union(targetPieceMatches).Union(coloredBombMatches).ToList());
-        GameManager.Instance?.UserPlayed();
+
+        OnUserPlayed?.Invoke();
     }
     #endregion INTERACTION
 
@@ -836,7 +852,8 @@ public class Board : MonoBehaviour
     IEnumerator ClearAndRefillBoardRoutine(List<GamePiece> gamePieces)
     {
         _playerInputEnabled = false;
-        isRefilling = true;
+
+        OnRefill?.Invoke(true);
 
         List<GamePiece> matches = gamePieces;
         ScoreManager.Instance.ResetMultiplier();
@@ -858,7 +875,7 @@ public class Board : MonoBehaviour
         // If true, we have a deadlock, so we handle it.
         if (OnFillFinished?.Invoke(_allGamePieces, 3) ?? true)
         {
-            isRefilling = false;
+            OnRefill?.Invoke(false);
             _playerInputEnabled = !GameManager.isGameOver;
         }
     }

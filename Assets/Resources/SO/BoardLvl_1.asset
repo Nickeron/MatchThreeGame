@@ -112,5 +112,7 @@ MonoBehaviour:
       Entry: 8
       Data: 
   levelNumber: 1
+  scoreGoals: 2c010000
+  movesAllowed: 30
   width: 5
   height: 5

@@ -1,39 +1,37 @@
 using System.Collections;
 using UnityEngine;
-using TMPro;
 using Sirenix.OdinInspector;
 using UnityEngine.SceneManagement;
 using System;
 
 public class GameManager : Singleton<GameManager>
 {
+    public static event Action GameStart;
     public static event Action<bool> GameOver;
-    public static event Action<Sprite, string, string> OnDisplayMessage;
-
-    public int movesLeft = 30;
-    public int scoreGoal = 1000;
-
-
-    public TextMeshProUGUI txtLevelName, txtRemainingMoves;
-
-    [HorizontalGroup("Message Window Icons", LabelWidth = 50)]
-    public Sprite icnLose, icnWin, icnGoal;
+    public static event Action<MessageType> OnDisplayMessage;
+    public UITextEvent LevelNameSet;
 
     [HideInInspector]
     public static int Level;
 
-    private Board _board;
-    private ScreenFader _screenFader;
-
     public static bool isGameOver { get; private set; } = false;
-    private bool _isWinner = false;
+
+    private bool _isBoardRefilling = true;
 
     private const string LEVEL_STRING = "Level";
 
-    void Start()
+    private void OnEnable()
     {
-        SetupGame(SceneManager.GetActiveScene());
         SceneManager.sceneLoaded += SetupGame;
+        LevelGoal.OnGameOver += HandleGameOver;
+        Board.OnRefill += IsBoardRefilling;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= SetupGame;
+        LevelGoal.OnGameOver -= HandleGameOver;
+        Board.OnRefill -= IsBoardRefilling;
     }
 
     void SetupGame(Scene activeScene, LoadSceneMode loadMode = LoadSceneMode.Single)
@@ -41,17 +39,10 @@ public class GameManager : Singleton<GameManager>
         Level = PlayerPrefs.GetInt(LEVEL_STRING);
         Debug.Log($"Starting Level {Level}");
 
-        _screenFader = FindObjectOfType<ScreenFader>().GetComponent<ScreenFader>();
-        _board = FindObjectOfType<Board>().GetComponent<Board>();
-
-        if (txtLevelName != null)
-        {
-            txtLevelName.text = $"{LEVEL_STRING} {Board.lvlBoard?.levelNumber}";
-        }
-        UpdateMoves();
+        LevelNameSet.Raise($"{LEVEL_STRING} {Board.lvlBoard?.levelNumber}");
 
         ActOnUserClick(StartTheGame);
-        OnDisplayMessage?.Invoke(icnGoal, $"Score Goal\n{scoreGoal}", "Start");
+        OnDisplayMessage?.Invoke(MessageType.Goal);
     }
 
     public static void GoBackOneLevel()
@@ -66,52 +57,16 @@ public class GameManager : Singleton<GameManager>
             Level = 1;
             PlayerPrefs.SetInt(LEVEL_STRING, Level);
         }
-
     }
 
-    public void UserPlayed()
-    {
-        movesLeft--;
-        UpdateMoves();
-
-        // Check for game over
-        if (movesLeft == 0 && !isGameOver)
-        {
-            isGameOver = true;
-            _isWinner = false;
-
-            StartCoroutine(EndGameRoutine());
-        }
-    }
-
-    private void UpdateMoves()
-    {
-        if (txtRemainingMoves != null)
-        {
-            txtRemainingMoves.text = movesLeft.ToString();
-        }
-    }
-
-    IEnumerator StartGameRoutine()
-    {
-        _screenFader?.FadeOff();
-
-        yield return new WaitForSeconds(0.5f);
-
-        _board?.SetupBoard();
-
-        ScoreManager.ScoredPoints += ScoredPoints;
-    }
-
-    void ScoredPoints(int newScore)
+    public void HandleGameOver(bool isWinner)
     {
         // Check for game over
-        if (newScore >= scoreGoal && !isGameOver)
+        if (!isGameOver)
         {
             isGameOver = true;
-            _isWinner = true;
 
-            StartCoroutine(EndGameRoutine());
+            StartCoroutine(EndGameRoutine(isWinner));
         }
     }
 
@@ -125,31 +80,36 @@ public class GameManager : Singleton<GameManager>
         MessageWindow.ButtonPressed -= gameFunction;
     }
 
-    IEnumerator EndGameRoutine()
+    IEnumerator EndGameRoutine(bool isWinner)
     {
         yield return new WaitForSeconds(2f);
-        yield return new WaitUntil(() => !_board.isRefilling);
+        yield return new WaitUntil(() => !_isBoardRefilling);
 
-        _screenFader?.FadeOn();
-        GameOver?.Invoke(_isWinner);
+        GameOver?.Invoke(isWinner);
         ActOnUserClick(LoadLevel);
-        if (_isWinner)
+        if (isWinner)
         {
             PlayerPrefs.SetInt(LEVEL_STRING, ++Level);
-            OnDisplayMessage?.Invoke(icnWin, $"You WIN!\n{scoreGoal}", "Next");
+            OnDisplayMessage?.Invoke(MessageType.Win);
         }
         else
         {
-            OnDisplayMessage?.Invoke(icnLose, $"You lost..\n{scoreGoal}", "Replay");
+            OnDisplayMessage?.Invoke(MessageType.Lose);
         }
 
         yield return null;
     }
 
+    void IsBoardRefilling(bool state)
+    {
+        _isBoardRefilling = state;
+    }
+
     public void StartTheGame()
     {
         UnsubscribeFromActionList(StartTheGame);
-        StartCoroutine(StartGameRoutine());
+
+        GameStart?.Invoke();
     }
 
     void LoadLevel()

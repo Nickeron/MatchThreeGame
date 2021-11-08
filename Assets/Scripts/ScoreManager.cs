@@ -1,31 +1,22 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
-using UnityEngine.UI;
 
 public class ScoreManager : Singleton<ScoreManager>
 {
     public static event Action<int> ScoredPoints;
+    public UITextEvent ScoreUpdate;
+
     public int _multiBonus = 20;
     int _currentScore = 0, _counterValue = 0, _increment = 5;
     int _multiCain, _bonus;
 
-    public Text txtScore;
-
     void Start()
     {
-        UpdateScoreText(_currentScore);
+        ScoreUpdate.Raise(_counterValue.ToString());
         GamePiece.PieceCleared += AddPoints;
         Board.IncreaseBonus += IncreaseMultiplier;
-    }
-
-    void UpdateScoreText(int scoreValue)
-    {
-        if(txtScore != null)
-        {
-            txtScore.text = scoreValue.ToString();
-        }
     }
 
     public bool CheckScore(int value)
@@ -65,13 +56,13 @@ public class ScoreManager : Singleton<ScoreManager>
         int iterations = 0;
         while(_counterValue < _currentScore && iterations < 10000)
         {
-            UpdateScoreText(_counterValue);
+            ScoreUpdate.Raise(_counterValue.ToString());
             _counterValue += _increment;
             iterations++;
             yield return null;
         }
 
         _counterValue = _currentScore;
-        UpdateScoreText(_counterValue);
+        ScoreUpdate.Raise(_counterValue.ToString());
     }
 }

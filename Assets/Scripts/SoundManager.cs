@@ -3,7 +3,7 @@ using UnityEngine;
 public class SoundManager : Singleton<SoundManager>
 {
     public AudioClip[] musicClips, winClips, loseClips, bonusClips;
-    public AudioClip clearSound;
+    public AudioClip clearSound, starCollectedSound;
 
     [Range(0f, 1f)]
     public float musicVolume = 1f, fxVolume = 1.0f;
@@ -16,12 +16,15 @@ public class SoundManager : Singleton<SoundManager>
         GamePiece.PieceCleared += PlayClearSound;
         Board.IncreaseBonus += PlayBonusSound;
         GameManager.GameOver += PlayGameOverSound;
+        LevelGoal.StarCollected += PlayStarCollectedSound;
     }
 
     private void OnDisable()
     {
         GamePiece.PieceCleared -= PlayClearSound;
         Board.IncreaseBonus -= PlayBonusSound;
+        GameManager.GameOver -= PlayGameOverSound;
+        LevelGoal.StarCollected -= PlayStarCollectedSound;
     }
 
     public AudioSource PlayClipAtPoint(AudioClip clip, float volume = 1f, Vector3 position = default(Vector3))
@@ -66,5 +69,10 @@ public class SoundManager : Singleton<SoundManager>
     private void PlayClearSound(Vector3 position, int _)
     {
         PlayClipAtPoint(clearSound, fxVolume, position);
+    }
+
+    private void PlayStarCollectedSound(int starsNo)
+    {
+        PlayClipAtPoint(starCollectedSound, fxVolume);
     }
 }
