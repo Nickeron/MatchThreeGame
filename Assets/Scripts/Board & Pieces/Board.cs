@@ -9,8 +9,6 @@ using UnityEngine;
 [RequireComponent(typeof(BoardShuffle))]
 public class Board : MonoBehaviour
 {
-    public static event Action IncreaseBonus;
-
     public int borderSize = 0;
     public int fillYOffset = 10;
     public float fillFallTime = 0.1f;
@@ -25,6 +23,7 @@ public class Board : MonoBehaviour
 
     bool _playerInputEnabled = true;
 
+    public static Action IncreaseBonus;
     public static Action<int, int, int, bool> OnPieceCleared;
     public static Action<int, int, int> OnTileBroke;
     public static Action OnUserPlayed;
@@ -881,26 +880,13 @@ public class Board : MonoBehaviour
     }
 
     IEnumerator MovePieces()
-    {        
-        ForEachPiece((x, y) =>  _allGamePieces[x, y].Move(x, y, swapTime, nameof(MovePieces)), spaceNotNull : true);
-        
+    {
+        ForEachPiece((x, y) => _allGamePieces[x, y].Move(x, y, swapTime, nameof(MovePieces)), spaceNotNull: true);
+
         yield return new WaitForSeconds(1f);
 
         //Debug.Log("Pieces Moved to their positions");
         yield return ClearAndRefillBoardRoutine(FindAllMatches());
-    }
-
-    IEnumerator HandleDeadLock()
-    {
-        // Give the player a second to process what's going on
-        yield return new WaitForSeconds(3f);
-
-        ClearBoard();
-
-        yield return new WaitForSeconds(1f);
-
-        yield return RefillRoutine();
-
     }
 
     IEnumerator ClearAndCollapseRoutine(List<GamePiece> gamePieces, float delayBetweenMoves = 0.2f)

@@ -8,24 +8,11 @@ public class GamePiece : Mover
 {
     public static event Action<Vector3, int> PieceCleared;
     public int xIndex, yIndex, scoreValue = 20;
-    
+
     public MatchValue matchValue;
 
     private Board _board;
     private bool _isMoving = false, _initialized = false;
-
-    //void Update()
-    //{
-    //    if (Input.GetKeyDown(KeyCode.RightArrow))
-    //    {
-    //        Move((int)transform.position.x + 1, (int)transform.position.y, 0.5f);
-    //    }
-
-    //    if (Input.GetKeyDown(KeyCode.LeftArrow))
-    //    {
-    //        Move((int)transform.position.x - 1, (int)transform.position.y, 0.5f);
-    //    }
-    //}
 
     public void Init(Board board)
     {
@@ -57,7 +44,7 @@ public class GamePiece : Mover
     IEnumerator MoveRoutine(Vector3 destination, float timeToMove)
     {
         Vector3 startPosition = transform.position;
-        float elapsedTime = 0f;        
+        float elapsedTime = 0f;
 
         //Debug.Log($"Moving {matchValue} from {transform.position.x},{transform.position.y} to {destination.x},{destination.y}");
 
@@ -73,7 +60,7 @@ public class GamePiece : Mover
         _board?.PlaceGamePiece(this, (int)destination.x, (int)destination.y);
 
         _isMoving = false;
-    }    
+    }
 
     public void SetColor(GamePiece matchObject)
     {
@@ -99,10 +86,9 @@ public class GamePiece : Mover
 
     private void OnDestroy()
     {
-        if (_initialized)
-        {
-            PieceCleared?.Invoke(transform.position, scoreValue);
-        }            
+        if (!_initialized) return;
+
+        PieceCleared?.Invoke(transform.position, scoreValue);
     }
 }
 

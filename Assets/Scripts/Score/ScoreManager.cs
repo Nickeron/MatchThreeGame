@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class ScoreManager : Singleton<ScoreManager>
 {
-    public static event Action<int> ScoredPoints;
+    public static event Action<int> OnScoreChange;
     public UITextEvent ScoreUpdate;
 
     public int _multiBonus = 20;
@@ -46,7 +46,7 @@ public class ScoreManager : Singleton<ScoreManager>
     {
         //Debug.Log($"Adding {value} points to Score, for piece cleared at {_}");
         _currentScore += (value * _multiCain) + _bonus;
-        ScoredPoints?.Invoke(_currentScore);
+        OnScoreChange?.Invoke(_currentScore);
         StartCoroutine(CountScoreRoutine());
     }
     #endregion

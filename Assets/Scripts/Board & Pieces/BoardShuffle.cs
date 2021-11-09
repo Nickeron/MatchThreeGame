@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BoardShuffle : MonoBehaviour
 {
-    public static event System.Action<List<GamePiece>> OnBoardShuffled;
+    public static System.Action<List<GamePiece>> OnBoardShuffled;
 
     private void OnEnable()
     {
@@ -66,9 +66,7 @@ public class BoardShuffle : MonoBehaviour
 
     void SwapPositions<T>(IList<T> swappableList, int firstPos, int secPos)
     {
-        var temp = swappableList[firstPos];
-        swappableList[firstPos] = swappableList[secPos];
-        swappableList[secPos] = temp;
+        (swappableList[secPos], swappableList[firstPos]) = (swappableList[firstPos], swappableList[secPos]);
     }
     #endregion HELPER METHODS
 }

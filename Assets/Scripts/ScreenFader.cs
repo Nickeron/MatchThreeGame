@@ -34,7 +34,7 @@ public class ScreenFader : MonoBehaviour
         _graphic.CrossFadeAlpha(alpha, timeToFade, ignoreTimeScale: true);
     }
 
-    public void FadeOn(bool _)
+    public void FadeOn(bool isWinner)
     {
         StartCoroutine(FadeRoutine(solidAlpha));
     } 

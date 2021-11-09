@@ -4,24 +4,25 @@ using Array = System.Array;
 
 public class LevelGoal : MonoBehaviour
 {
-    public int[] scoreGoals = new int[3] { 1000, 2000, 3000 };
+    public static int[] scoreGoals = new int[3] { 1000, 2000, 3000 };
     public int movesLeft = 30;
     private bool _isWinner = false;
     private int _starsCollected = 0;
 
     public UITextEvent RemainingMovesUpate;
-    public static event System.Action<bool> OnGameOver;
-    public static event System.Action<int> StarCollected;
+    public static System.Action<bool> OnGameOver;
+    public static System.Action<int> StarCollected;
+    public static System.Action<int> OnScoreChange;
 
     private void OnEnable()
     {
-        ScoreManager.ScoredPoints += ScoredPoints;
+        ScoreManager.OnScoreChange += ScoredPoints;
         Board.OnUserPlayed += UserPlayed;
     }
 
     private void OnDisable()
     {
-        ScoreManager.ScoredPoints -= ScoredPoints;
+        ScoreManager.OnScoreChange -= ScoredPoints;
         Board.OnUserPlayed -= UserPlayed;
     }
 
@@ -54,7 +55,6 @@ public class LevelGoal : MonoBehaviour
         _isWinner = newScore >= scoreGoals[0];
 
         UpdateStarCount(newScore);
-
         // Check for game over with IsWinner = true
         if (newScore >= scoreGoals[scoreGoals.Length - 1])
         {

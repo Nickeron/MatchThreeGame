@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class BoardDeadlock : MonoBehaviour
 {
-    public static event Action<GamePiece[,]> OnDeadlock;
+    public static Action<GamePiece[,]> OnDeadlock;
 
     private void OnEnable()
     {

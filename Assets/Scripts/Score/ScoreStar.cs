@@ -9,20 +9,33 @@ public class ScoreStar : MonoBehaviour
     // reference to the icon 
     public Image star;
 
+    [Range(1, 3)]
+    public int Index = 1;
+
     // reference to activation particle effect
-    public ParticlePlayer starFX;
+    public GameObject starFX;
 
     // delay between particles and turning icon on
     public float delay = 0.5f;
 
     // have we been activated already?
-    public bool activated = false;
+    bool activated = false;
 
 
     void Start()
     {
         SetActive(false);
-        StartCoroutine(TestRoutine());
+        SetPosition();       
+    }
+
+    private void OnEnable()
+    {
+        LevelGoal.StarCollected += Activate;
+    }
+    
+    private void OnDisable()
+    {
+        LevelGoal.StarCollected -= Activate;
     }
 
     // turn the icon on or off
@@ -35,10 +48,10 @@ public class ScoreStar : MonoBehaviour
     }
 
     // activate the star 
-    public void Activate()
+    public void Activate(int activeIndex)
     {
         // only activate once
-        if (activated)
+        if (activated || Index != activeIndex)
         {
             return;
         }
@@ -49,14 +62,10 @@ public class ScoreStar : MonoBehaviour
 
     IEnumerator ActivateRoutine()
     {
-        // we are activated
         activated = true;
 
         // play the ParticlePlayer
-        if (starFX != null)
-        {
-            starFX.Play();
-        }
+        Instantiate(starFX, transform.position, Quaternion.identity).GetComponent<ParticlePlayer>()?.Play();
 
         yield return new WaitForSeconds(delay);
 
@@ -64,11 +73,19 @@ public class ScoreStar : MonoBehaviour
         SetActive(true);
     }
 
-    // test ScoreStar after 3 seconds
-    IEnumerator TestRoutine()
+    void SetPosition()
     {
-        yield return new WaitForSeconds(3f);
-        Activate();
+        GetComponent<RectTransform>().anchoredPosition = new Vector2(
+            CalculateXPos(transform.parent.GetComponent<RectTransform>().rect.width), 0);
     }
 
+    float CalculateXPos(float sliderWidth)
+    {
+        return (sliderWidth * GetScorePercentage()) - (sliderWidth * 0.5f);
+    }
+
+    float GetScorePercentage()
+    {
+        return (float)LevelGoal.scoreGoals[Index - 1] / LevelGoal.scoreGoals[LevelGoal.scoreGoals.Length - 1];
+    }
 }
