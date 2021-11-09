@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System;
 
-public class GameManager : Singleton<GameManager>
+public class GameManager : MonoBehaviour
 {
     public static event Action GameStart;
     public static event Action<bool> GameOver;
@@ -13,7 +13,7 @@ public class GameManager : Singleton<GameManager>
     [HideInInspector]
     public static int Level;
 
-    public static bool isGameOver { get; private set; } = false;
+    private static bool isGameOver;
 
     private bool _isBoardRefilling = true;
 
@@ -21,6 +21,7 @@ public class GameManager : Singleton<GameManager>
 
     private void OnEnable()
     {
+        isGameOver = false;
         SceneManager.sceneLoaded += SetupGame;
         LevelGoal.OnGameOver += HandleGameOver;
         Board.OnRefill += IsBoardRefilling;
@@ -43,6 +44,8 @@ public class GameManager : Singleton<GameManager>
         ActOnUserClick(StartTheGame);
         OnDisplayMessage?.Invoke(MessageType.Goal);
     }
+
+    public static bool CanUserPlay() => !isGameOver;
 
     public static void GoBackOneLevel()
     {

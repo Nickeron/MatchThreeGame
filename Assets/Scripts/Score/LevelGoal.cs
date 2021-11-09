@@ -1,50 +1,64 @@
-using UnityEngine;
+using System;
 
-using Array = System.Array;
+using UnityEngine;
 
 public class LevelGoal : MonoBehaviour
 {
-    public static int[] scoreGoals = new int[3] { 1000, 2000, 3000 };
-    public int movesLeft = 30;
+    public int remainingCurrency = 30;
     private bool _isWinner = false;
     private int _starsCollected = 0;
 
-    public UITextEvent RemainingMovesUpate;
-    public static System.Action<bool> OnGameOver;
-    public static System.Action<int> StarCollected;
-    public static System.Action<int> OnScoreChange;
+    public UITextEvent RemainingCurrencyUpdate;
+    public static Action<bool> OnGameOver;
+    public static Action<int> StarCollected;
+    public static Action<int> OnScoreChange;
+
+    private Action CurrencyReducer;
 
     private void OnEnable()
     {
         ScoreManager.OnScoreChange += ScoredPoints;
-        Board.OnUserPlayed += UserPlayed;
     }
 
     private void OnDisable()
     {
         ScoreManager.OnScoreChange -= ScoredPoints;
-        Board.OnUserPlayed -= UserPlayed;
+        CurrencyReducer -= ReduceCurrency;
     }
 
     void Start()
     {
-        Array.Sort(scoreGoals);
-        RemainingMovesUpate.Raise(movesLeft.ToString());
+        SwitchCurrencyReduction();
+        RemainingCurrencyUpdate.Raise(remainingCurrency.ToString());
+    }
+
+    void SwitchCurrencyReduction()
+    {
+        switch (Board.lvlBoard.levelCurrency)
+        {
+            case LevelCurrency.Moves:
+                CurrencyReducer = Board.OnUserPlayed;
+                break;
+            case LevelCurrency.Seconds:
+                CurrencyReducer = Board.OnUserPlayed;
+                break;
+        }
+        CurrencyReducer += ReduceCurrency;
     }
 
     int GetStarsFromScore(int score)
     {
-        int starCount = Array.FindIndex(scoreGoals, starScore => starScore > score);
-        return starCount > -1 ? starCount : scoreGoals.Length;
+        int starCount = Array.FindIndex(Board.lvlBoard.scoreGoals, starScore => starScore > score);
+        return starCount > -1 ? starCount : Board.lvlBoard.scoreGoals.Length;
     }
 
-    public void UserPlayed()
+    public void ReduceCurrency()
     {
-        movesLeft--;
-        RemainingMovesUpate.Raise(movesLeft.ToString());
+        remainingCurrency--;
+        RemainingCurrencyUpdate.Raise(remainingCurrency.ToString());
 
         // Check for game over
-        if (movesLeft == 0)
+        if (remainingCurrency == 0)
         {
             OnGameOver?.Invoke(_isWinner);
         }
@@ -52,11 +66,11 @@ public class LevelGoal : MonoBehaviour
 
     void ScoredPoints(int newScore)
     {
-        _isWinner = newScore >= scoreGoals[0];
+        _isWinner = newScore >= Board.lvlBoard.scoreGoals[0];
 
         UpdateStarCount(newScore);
         // Check for game over with IsWinner = true
-        if (newScore >= scoreGoals[scoreGoals.Length - 1])
+        if (newScore >= Board.lvlBoard.scoreGoals[Board.lvlBoard.scoreGoals.Length - 1])
         {
             OnGameOver?.Invoke(true);
         }
@@ -70,4 +84,10 @@ public class LevelGoal : MonoBehaviour
         _starsCollected = newStarsCount;
         StarCollected?.Invoke(_starsCollected);
     }
+}
+
+public enum LevelCurrency
+{
+    Moves,
+    Seconds
 }

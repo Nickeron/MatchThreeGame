@@ -914,6 +914,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4267574605872724111, guid: dd4d831d4a46b4672a78ef1882f87df8, type: 3}
+      propertyPath: icnWin
+      value: 
+      objectReference: {fileID: 21300000, guid: c259d8adc97a5794a8f193b496a77d81, type: 3}
+    - target: {fileID: 4267574605872724111, guid: dd4d831d4a46b4672a78ef1882f87df8, type: 3}
+      propertyPath: icnGoal
+      value: 
+      objectReference: {fileID: 21300000, guid: 1decf8e07b77560439f43073b3af2bf1, type: 3}
+    - target: {fileID: 4267574605872724111, guid: dd4d831d4a46b4672a78ef1882f87df8, type: 3}
+      propertyPath: icnLose
+      value: 
+      objectReference: {fileID: 21300000, guid: a849d0d14c9db9f42bb1e7e010e39604, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dd4d831d4a46b4672a78ef1882f87df8, type: 3}
 --- !u!224 &728732528 stripped
@@ -979,8 +991,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c68d0a73f776cf640a39a4a46103337b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movesLeft: 30
-  RemainingMovesUpate: {fileID: 11400000, guid: a224b9e1464d8c34d8b6d639b134f851, type: 2}
+  remainingCurrency: 30
+  RemainingCurrencyUpdate: {fileID: 11400000, guid: a224b9e1464d8c34d8b6d639b134f851, type: 2}
 --- !u!1 &807464721
 GameObject:
   m_ObjectHideFlags: 0

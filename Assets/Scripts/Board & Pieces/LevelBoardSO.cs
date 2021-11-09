@@ -17,8 +17,12 @@ public class LevelBoardSO : SerializedScriptableObject
     public int[] scoreGoals = new int [3] {300, 500, 1000};
 
     [BoxGroup("Goals")]
+    public LevelCurrency levelCurrency = LevelCurrency.Moves;
+
+
+    [BoxGroup("Goals")]
     [PropertyRange(5, 50)]
-    public int movesAllowed = 30;
+    public int currencyAllowed = 30;
 
     [BoxGroup("Size")]
     [OnValueChanged(nameof(SetBoardSize))]

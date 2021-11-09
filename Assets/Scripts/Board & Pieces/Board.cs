@@ -23,11 +23,12 @@ public class Board : MonoBehaviour
 
     bool _playerInputEnabled = true;
 
-    public static Action IncreaseBonus;
+    public static Action<bool> OnBonusUpdate;
+    public static Action<int> OnBonusCalculate;
     public static Action<int, int, int, bool> OnPieceCleared;
     public static Action<int, int, int> OnTileBroke;
     public static Action OnUserPlayed;
-    public static Func<GamePiece[,], int, bool> OnFillFinished;
+    public static Func<GamePiece[,], bool> OnFillFinished;
     public static Action<bool> OnRefill;
 
     public StartingObject[] startingPieces;
@@ -42,6 +43,9 @@ public class Board : MonoBehaviour
     private void OnEnable()
     {
         LoadBoardForLevel();
+
+        // Make sure that score goals are in ascending order
+        Array.Sort(lvlBoard.scoreGoals);
 
         _allTiles = new Tile[lvlBoard.width, lvlBoard.height];
         _allGamePieces = new GamePiece[lvlBoard.width, lvlBoard.height];
@@ -760,7 +764,7 @@ public class Board : MonoBehaviour
         {
             if (piece != null)
             {
-                ScoreManager.Instance.CalculateBonus(gamePieces.Count);
+                OnBonusCalculate?.Invoke(gamePieces.Count);
 
                 ClearPieceAt(piece.xIndex, piece.yIndex);
 
@@ -855,11 +859,11 @@ public class Board : MonoBehaviour
         OnRefill?.Invoke(true);
 
         List<GamePiece> matches = gamePieces;
-        ScoreManager.Instance.ResetMultiplier();
+        OnBonusUpdate?.Invoke(false);
 
         do
         {
-            IncreaseBonus?.Invoke();
+            OnBonusUpdate?.Invoke(true);
             yield return StartCoroutine(ClearAndCollapseRoutine(matches));
 
             yield return StartCoroutine(RefillRoutine());
@@ -870,12 +874,12 @@ public class Board : MonoBehaviour
         }
         while (matches.Count > 0);
 
-        // We are done refilling, so we check for a deadlock by firing the event deadlock uses.
+        // After refilling, we check for a deadlock by firing the event deadlock uses.
         // If true, we have a deadlock, so we handle it.
-        if (OnFillFinished?.Invoke(_allGamePieces, 3) ?? true)
+        if (OnFillFinished?.Invoke(_allGamePieces) ?? true)
         {
             OnRefill?.Invoke(false);
-            _playerInputEnabled = !GameManager.isGameOver;
+            _playerInputEnabled = GameManager.CanUserPlay();
         }
     }
 
@@ -939,7 +943,7 @@ public class Board : MonoBehaviour
             else
             {
                 tries--;
-                IncreaseBonus?.Invoke();
+                OnBonusUpdate?.Invoke(true);
                 yield return StartCoroutine(ClearAndCollapseRoutine(matches));
             }
         } while (tries > 0);

@@ -16,6 +16,6 @@ public class ScoreMeter : MonoBehaviour
 
     void UpdateScoreMeter (int newScore)
     {
-        GetComponent<Slider>().value = (float) newScore / LevelGoal.scoreGoals[LevelGoal.scoreGoals.Length - 1];
+        GetComponent<Slider>().value = (float) newScore / Board.lvlBoard.scoreGoals[Board.lvlBoard.scoreGoals.Length - 1];
     }
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SoundManager : Singleton<SoundManager>
+public class SoundManager : MonoBehaviour
 {
     public AudioClip[] musicClips, winClips, loseClips, bonusClips;
     public AudioClip clearSound, starCollectedSound;
@@ -14,7 +14,7 @@ public class SoundManager : Singleton<SoundManager>
     {
         PlayMusic();
         GamePiece.PieceCleared += PlayClearSound;
-        Board.IncreaseBonus += PlayBonusSound;
+        Board.OnBonusUpdate += PlayBonusSound;
         GameManager.GameOver += PlayGameOverSound;
         LevelGoal.StarCollected += PlayStarCollectedSound;
     }
@@ -22,7 +22,7 @@ public class SoundManager : Singleton<SoundManager>
     private void OnDisable()
     {
         GamePiece.PieceCleared -= PlayClearSound;
-        Board.IncreaseBonus -= PlayBonusSound;
+        Board.OnBonusUpdate -= PlayBonusSound;
         GameManager.GameOver -= PlayGameOverSound;
         LevelGoal.StarCollected -= PlayStarCollectedSound;
     }
@@ -53,12 +53,12 @@ public class SoundManager : Singleton<SoundManager>
 
     public void PlayMusic()
     {
-        PlayRandom(musicClips, musicVolume);
+        PlayRandom(musicClips, musicVolume).loop = true;
     }
       
-    public void PlayBonusSound()
+    public void PlayBonusSound(bool increase)
     {
-        PlayRandom(bonusClips, fxVolume);
+        if(increase) PlayRandom(bonusClips, fxVolume);
     }
 
     private void PlayGameOverSound(bool isWinner)

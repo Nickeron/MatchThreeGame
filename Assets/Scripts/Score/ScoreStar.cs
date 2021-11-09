@@ -86,6 +86,6 @@ public class ScoreStar : MonoBehaviour
 
     float GetScorePercentage()
     {
-        return (float)LevelGoal.scoreGoals[Index - 1] / LevelGoal.scoreGoals[LevelGoal.scoreGoals.Length - 1];
+        return (float)Board.lvlBoard.scoreGoals[Index - 1] / Board.lvlBoard.scoreGoals[Board.lvlBoard.scoreGoals.Length - 1];
     }
 }

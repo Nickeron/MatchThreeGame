@@ -3,7 +3,7 @@ using System.Collections;
 
 using UnityEngine;
 
-public class ScoreManager : Singleton<ScoreManager>
+public class ScoreManager : MonoBehaviour
 {
     public static event Action<int> OnScoreChange;
     public UITextEvent ScoreUpdate;
@@ -16,7 +16,7 @@ public class ScoreManager : Singleton<ScoreManager>
     {
         ScoreUpdate.Raise(_counterValue.ToString());
         GamePiece.PieceCleared += AddPoints;
-        Board.IncreaseBonus += IncreaseMultiplier;
+        Board.OnBonusUpdate += HandleBonusUpdate;
     }
 
     public bool CheckScore(int value)
@@ -36,11 +36,13 @@ public class ScoreManager : Singleton<ScoreManager>
     }
     #endregion
 
-    #region INCREASE
-    public void IncreaseMultiplier()
+    #region INCREASE  
+
+    private void HandleBonusUpdate(bool increase)
     {
-        _multiCain++;
-    }   
+        // Increase or reset the bonus
+        _multiCain = increase ? _multiCain + 1 : 0;
+    }
 
     public void AddPoints(Vector3 _, int value)
     {
@@ -64,5 +66,11 @@ public class ScoreManager : Singleton<ScoreManager>
 
         _counterValue = _currentScore;
         ScoreUpdate.Raise(_counterValue.ToString());
+    }
+
+    private void OnDisable()
+    {
+        GamePiece.PieceCleared -= AddPoints;
+        Board.OnBonusUpdate -= HandleBonusUpdate;
     }
 }

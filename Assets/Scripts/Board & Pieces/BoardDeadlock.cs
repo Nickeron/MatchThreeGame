@@ -18,13 +18,13 @@ public class BoardDeadlock : MonoBehaviour
         Board.OnFillFinished -= AreThereMoves;
     }
 
-    public bool AreThereMoves(GamePiece[,] allPieces, int listLength = 3)
+    public bool AreThereMoves(GamePiece[,] allPieces)
     {
-        for (int i = 0; i < allPieces.GetLength(0); i++)
+        for (int x = 0; x < allPieces.GetLength(0); x++)
         {
-            for (int j = 0; j < allPieces.GetLength(1); j++)
+            for (int y = 0; y < allPieces.GetLength(1); y++)
             {
-                if (HasMoveAt(allPieces, i, j, listLength)) return true;
+                if (HasMoveAt(allPieces, x, y, 3)) return true;
             }
         }
 
